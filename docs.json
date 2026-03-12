@@ -66,6 +66,8 @@
               "api/albums/create",
               "api/albums/list",
               "api/albums/get",
+              "api/albums/summary",
+              "api/albums/ganadores",
               "api/albums/update",
               "api/albums/delete"
             ]

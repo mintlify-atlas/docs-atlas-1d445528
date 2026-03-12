@@ -1,0 +1,191 @@
+---
+title: "Get Album Winners"
+description: "Retrieve winners associated with an album"
+---
+
+## Endpoint
+
+```
+GET /api/albums/{albumId}/ganadores
+```
+
+Retrieves the list of winners (ganadores) associated with a specific album, ordered by year in descending order.
+
+## Path Parameters
+
+<ParamField path="albumId" type="long" required>
+  The ID of the album to retrieve winners for
+</ParamField>
+
+## Response
+
+<ResponseField name="success" type="boolean">
+  Indicates if the request was successful
+</ResponseField>
+
+<ResponseField name="message" type="string">
+  Human-readable response message
+</ResponseField>
+
+<ResponseField name="data" type="array">
+  Array of winner objects
+  
+  <Expandable title="GanadorAlbumDTO">
+    <ResponseField name="artista" type="string">
+      Artist or winner name
+    </ResponseField>
+    
+    <ResponseField name="premio" type="string">
+      Award or prize name
+    </ResponseField>
+    
+    <ResponseField name="anio" type="integer">
+      Year the award was won
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<ResponseField name="timestamp" type="datetime">
+  Response timestamp
+</ResponseField>
+
+## Example Request
+
+```bash cURL
+curl -X GET http://localhost:8080/api/albums/1/ganadores \
+  -H "Content-Type: application/json"
+```
+
+## Example Responses
+
+<CodeGroup>
+```json 200 - Success
+{
+  "success": true,
+  "message": "Ganadores del álbum recuperados exitosamente",
+  "data": [
+    {
+      "artista": "Taylor Swift",
+      "premio": "Album of the Year",
+      "anio": 2024
+    },
+    {
+      "artista": "Harry Styles",
+      "premio": "Best Pop Album",
+      "anio": 2023
+    },
+    {
+      "artista": "Beyoncé",
+      "premio": "Best R&B Album",
+      "anio": 2023
+    }
+  ],
+  "timestamp": "2026-03-12T10:30:00"
+}
+```
+
+```json 404 - Album Not Found
+{
+  "success": false,
+  "message": "Álbum no encontrado",
+  "errorCode": "RESOURCE_NOT_FOUND",
+  "timestamp": "2026-03-12T10:30:00"
+}
+```
+</CodeGroup>
+
+## Response Details
+
+<Note>
+Winners are returned in **descending order by year** (most recent first).
+</Note>
+
+### Fields Description
+
+- **artista**: The name of the artist or winner
+- **premio**: The award or prize that was won
+- **anio**: The year the award was won
+
+## Use Cases
+
+<CardGroup cols={2}>
+  <Card title="Album Awards" icon="trophy">
+    Display awards and recognition for an album
+  </Card>
+  <Card title="Artist Achievements" icon="star">
+    Show artist accomplishments over time
+  </Card>
+  <Card title="Historical Data" icon="clock-rotate-left">
+    Track award history chronologically
+  </Card>
+  <Card title="Collection Value" icon="coins">
+    Highlight prestigious or award-winning albums
+  </Card>
+</CardGroup>
+
+## Example Usage
+
+<Tabs>
+  <Tab title="JavaScript">
+    ```javascript
+    async function getAlbumWinners(albumId) {
+      const response = await fetch(
+        `http://localhost:8080/api/albums/${albumId}/ganadores`
+      );
+      const data = await response.json();
+      
+      if (data.success) {
+        console.log(`Found ${data.data.length} winners`);
+        data.data.forEach(winner => {
+          console.log(`${winner.anio}: ${winner.artista} - ${winner.premio}`);
+        });
+      }
+    }
+    
+    getAlbumWinners(1);
+    ```
+  </Tab>
+  
+  <Tab title="Python">
+    ```python
+    import requests
+    
+    def get_album_winners(album_id):
+        response = requests.get(
+            f'http://localhost:8080/api/albums/{album_id}/ganadores'
+        )
+        data = response.json()
+        
+        if data['success']:
+            print(f"Found {len(data['data'])} winners")
+            for winner in data['data']:
+                print(f"{winner['anio']}: {winner['artista']} - {winner['premio']}")
+    
+    get_album_winners(1)
+    ```
+  </Tab>
+  
+  <Tab title="Java">
+    ```java
+    public List<GanadorAlbumDTO> getAlbumWinners(Long albumId) {
+        String url = "http://localhost:8080/api/albums/" + albumId + "/ganadores";
+        
+        ResponseEntity<ApiResponseDTO<List<GanadorAlbumDTO>>> response = 
+            restTemplate.exchange(
+                url,
+                HttpMethod.GET,
+                null,
+                new ParameterizedTypeReference<ApiResponseDTO<List<GanadorAlbumDTO>>>() {}
+            );
+        
+        return response.getBody().getData();
+    }
+    ```
+  </Tab>
+</Tabs>
+
+## Related Endpoints
+
+- [Get Album](/api/albums/get) - Get basic album information
+- [Get Album Summary](/api/albums/summary) - Get album collection statistics
+- [List Albums](/api/albums/list) - List all albums

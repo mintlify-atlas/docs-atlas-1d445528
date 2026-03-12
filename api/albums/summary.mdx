@@ -1,0 +1,147 @@
+---
+title: "Get Album Summary"
+description: "Retrieve summary statistics for an album including catalog and collection status"
+---
+
+## Endpoint
+
+```
+GET /api/albums/{id}/summary
+```
+
+Retrieves comprehensive summary statistics for an album, including total catalog size, owned stickers, repeated stickers, and missing stickers.
+
+## Path Parameters
+
+<ParamField path="id" type="long" required>
+  The ID of the album to retrieve summary for
+</ParamField>
+
+## Response
+
+<ResponseField name="success" type="boolean">
+  Indicates if the request was successful
+</ResponseField>
+
+<ResponseField name="message" type="string">
+  Human-readable response message
+</ResponseField>
+
+<ResponseField name="data" type="object">
+  Album summary data
+  
+  <Expandable title="AlbumSummaryDTO">
+    <ResponseField name="id" type="long">
+      Album unique identifier
+    </ResponseField>
+    
+    <ResponseField name="nombre" type="string">
+      Album name
+    </ResponseField>
+    
+    <ResponseField name="year" type="integer">
+      Album release year
+    </ResponseField>
+    
+    <ResponseField name="active" type="boolean">
+      Whether the album is active
+    </ResponseField>
+    
+    <ResponseField name="totalCatalogo" type="integer">
+      Total number of stickers in the catalog
+    </ResponseField>
+    
+    <ResponseField name="totalLaminas" type="integer">
+      Total number of owned stickers (including duplicates)
+    </ResponseField>
+    
+    <ResponseField name="laminasRepetidasTotal" type="integer">
+      Total count of repeated stickers
+    </ResponseField>
+    
+    <ResponseField name="laminasFaltantesTotal" type="integer">
+      Number of stickers still missing from the collection
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+<ResponseField name="timestamp" type="datetime">
+  Response timestamp
+</ResponseField>
+
+## Example Request
+
+```bash cURL
+curl -X GET http://localhost:8080/api/albums/1/summary \
+  -H "Content-Type: application/json"
+```
+
+## Example Responses
+
+<CodeGroup>
+```json 200 - Success
+{
+  "success": true,
+  "message": "Resumen del álbum recuperado exitosamente",
+  "data": {
+    "id": 1,
+    "nombre": "World Cup 2026",
+    "year": 2026,
+    "active": true,
+    "totalCatalogo": 100,
+    "totalLaminas": 75,
+    "laminasRepetidasTotal": 15,
+    "laminasFaltantesTotal": 40
+  },
+  "timestamp": "2026-03-12T10:30:00"
+}
+```
+
+```json 404 - Album Not Found
+{
+  "success": false,
+  "message": "Álbum no encontrado",
+  "errorCode": "RESOURCE_NOT_FOUND",
+  "timestamp": "2026-03-12T10:30:00"
+}
+```
+</CodeGroup>
+
+## Use Cases
+
+<CardGroup cols={2}>
+  <Card title="Collection Progress" icon="chart-line">
+    Track how complete your album collection is
+  </Card>
+  <Card title="Trading Insights" icon="arrows-repeat">
+    Identify duplicates available for trading
+  </Card>
+  <Card title="Dashboard Display" icon="gauge">
+    Show collection statistics on user dashboards
+  </Card>
+  <Card title="Completion Status" icon="check-circle">
+    Calculate percentage of album completion
+  </Card>
+</CardGroup>
+
+## Calculation Examples
+
+### Completion Percentage
+```
+completion = ((totalCatalogo - laminasFaltantesTotal) / totalCatalogo) * 100
+           = ((100 - 40) / 100) * 100
+           = 60%
+```
+
+### Unique Stickers Owned
+```
+uniqueStickers = totalLaminas - laminasRepetidasTotal
+               = 75 - 15
+               = 60
+```
+
+## Related Endpoints
+
+- [Get Album](/api/albums/get) - Get basic album information
+- [Get Catalog Status](/api/catalog/status) - Detailed breakdown of owned and missing stickers
+- [List Albums](/api/albums/list) - List all albums
