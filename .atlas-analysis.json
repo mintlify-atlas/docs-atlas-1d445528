@@ -1,0 +1,121 @@
+{
+  "projectType": "api-service",
+  "projectName": "Album Collection Manager API",
+  "projectDescription": "REST API for managing collectible albums and stickers with catalog validation and soft delete support",
+  "theme": "mint",
+  "primaryColor": "#10b981",
+  "lightColor": "#34d399",
+  "darkColor": "#059669",
+  "navigation": {
+    "tabs": [
+      {
+        "tab": "Documentation",
+        "groups": [
+          {
+            "group": "Getting Started",
+            "pages": [
+              "introduction",
+              "quickstart",
+              "installation"
+            ]
+          },
+          {
+            "group": "Core Concepts",
+            "pages": [
+              "concepts/architecture",
+              "concepts/data-model",
+              "concepts/soft-delete",
+              "concepts/catalog-system"
+            ]
+          },
+          {
+            "group": "Guides",
+            "pages": [
+              "guides/authentication",
+              "guides/error-handling",
+              "guides/database-setup",
+              "guides/docker-deployment"
+            ]
+          }
+        ]
+      },
+      {
+        "tab": "API Reference",
+        "groups": [
+          {
+            "group": "Albums",
+            "pages": [
+              "api/albums/overview",
+              "api/albums/create",
+              "api/albums/list",
+              "api/albums/get",
+              "api/albums/update",
+              "api/albums/delete"
+            ]
+          },
+          {
+            "group": "Catalog",
+            "pages": [
+              "api/catalog/overview",
+              "api/catalog/create",
+              "api/catalog/get",
+              "api/catalog/status"
+            ]
+          },
+          {
+            "group": "Laminas",
+            "pages": [
+              "api/laminas/overview",
+              "api/laminas/create",
+              "api/laminas/bulk-upload",
+              "api/laminas/list",
+              "api/laminas/get",
+              "api/laminas/update",
+              "api/laminas/delete"
+            ]
+          },
+          {
+            "group": "Other Resources",
+            "pages": [
+              "api/resources/ciudades-chile",
+              "api/resources/exoplanetas",
+              "api/resources/equipos-futbol"
+            ]
+          }
+        ]
+      }
+    ]
+  },
+  "keyFeatures": [
+    "Album and sticker (lamina) collection management",
+    "Catalog-based validation system",
+    "Duplicate detection for repeated stickers",
+    "Soft delete pattern across all entities",
+    "JPA auditing with automatic timestamps",
+    "OpenAPI/Swagger UI documentation",
+    "Bulk upload support for stickers",
+    "Generic API response wrapper",
+    "H2 in-memory database for development",
+    "MySQL support for production"
+  ],
+  "publicApiSurface": [
+    "POST /api/albums - Create new album",
+    "GET /api/albums - List all albums",
+    "GET /api/albums/{id} - Get album by ID",
+    "PUT /api/albums/{id} - Update album",
+    "DELETE /api/albums/{id} - Soft delete album",
+    "POST /api/albums/{albumId}/catalogo - Create catalog",
+    "GET /api/albums/{albumId}/catalogo - Get catalog",
+    "GET /api/albums/{albumId}/catalogo/estado - Get album statistics",
+    "POST /api/laminas - Add single sticker",
+    "POST /api/laminas/masivo - Bulk upload stickers",
+    "GET /api/laminas - List all stickers",
+    "GET /api/laminas/{id} - Get sticker by ID",
+    "GET /api/laminas/album/{albumId} - Get stickers by album",
+    "PUT /api/laminas/{id} - Update sticker",
+    "DELETE /api/laminas/{id} - Soft delete sticker",
+    "GET /api/ciudades-chile - List Chilean cities",
+    "GET /api/exoplanetas - List exoplanets",
+    "GET /api/equipos-futbol-espana - List Spanish football teams"
+  ]
+}
