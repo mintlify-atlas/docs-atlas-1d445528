@@ -1,0 +1,271 @@
+---
+title: 'Delete Sticker'
+api: 'DELETE /api/laminas/{id}'
+description: 'Soft delete a sticker by marking it as inactive'
+---
+
+## Overview
+
+This endpoint performs a soft delete on a sticker, marking it as inactive rather than permanently removing it from the database. Inactive stickers are excluded from list operations but can still be retrieved by ID.
+
+<Note>
+  This is a soft delete operation. The sticker is not permanently removed from the database; instead, its `active` field is set to `false`.
+</Note>
+
+## Path Parameters
+
+<ParamField path="id" type="number" required>
+  The unique ID of the sticker to delete
+</ParamField>
+
+## Response
+
+<ResponseField name="success" type="boolean">
+  Indicates if the operation was successful
+</ResponseField>
+
+<ResponseField name="message" type="string">
+  Success message confirming the deletion
+  
+  Example: `"Lámina con ID: 101 ha sido marcada como inactiva"`
+</ResponseField>
+
+<ResponseField name="data" type="null">
+  Always `null` for delete operations
+</ResponseField>
+
+<ResponseField name="timestamp" type="string">
+  ISO 8601 timestamp of the response
+</ResponseField>
+
+## Examples
+
+### Delete a Sticker
+
+<CodeGroup>
+```bash cURL
+curl -X DELETE https://api.example.com/api/laminas/101
+```
+
+```json Response
+{
+  "success": true,
+  "message": "Lámina con ID: 101 ha sido marcada como inactiva",
+  "data": null,
+  "timestamp": "2026-03-12T16:30:00"
+}
+```
+</CodeGroup>
+
+### Verify Deletion
+
+After deleting, you can still retrieve the sticker by ID to verify it's marked as inactive:
+
+<CodeGroup>
+```bash cURL (Get Deleted Sticker)
+curl -X GET https://api.example.com/api/laminas/101
+```
+
+```json Response
+{
+  "success": true,
+  "message": "Lámina obtenida correctamente",
+  "data": {
+    "id": 101,
+    "nombre": "Lionel Messi",
+    "imagen": "https://example.com/images/messi.jpg",
+    "fechaLanzamiento": "2024-01-15",
+    "tipoLamina": "especial",
+    "createdAt": "2026-03-12T10:30:00",
+    "updatedAt": "2026-03-12T16:30:00",
+    "active": false,
+    "album": {
+      "id": 1,
+      "nombre": "FIFA World Cup Qatar 2022",
+      "year": 2022
+    }
+  },
+  "timestamp": "2026-03-12T16:35:00"
+}
+```
+</CodeGroup>
+
+## Error Responses
+
+### Sticker Not Found
+
+```json
+{
+  "success": false,
+  "message": "Lámina with ID 999 not found",
+  "timestamp": "2026-03-12T16:30:00"
+}
+```
+
+### Invalid ID Format
+
+```json
+{
+  "success": false,
+  "message": "Invalid ID format",
+  "timestamp": "2026-03-12T16:30:00"
+}
+```
+
+## Soft Delete Behavior
+
+### What Happens When You Delete a Sticker
+
+1. The sticker's `active` field is set to `false`
+2. The `updatedAt` timestamp is updated to reflect the deletion time
+3. The sticker remains in the database
+
+### Where Deleted Stickers Appear
+
+<ResponseField name="List Operations">
+  **Excluded**: Deleted stickers do NOT appear in:
+  - `GET /api/laminas` (all stickers)
+  - `GET /api/laminas/album/{albumId}` (album stickers)
+</ResponseField>
+
+<ResponseField name="Get by ID">
+  **Included**: Deleted stickers CAN be retrieved via:
+  - `GET /api/laminas/{id}` (specific sticker)
+  
+  The response will show `"active": false`
+</ResponseField>
+
+### Impact on Duplicates
+
+Deleting a sticker affects duplicate counts:
+
+**Before deletion**:
+- 3 copies of "Lionel Messi" exist
+- Creating a new one shows: `"cantidadRepetidas": 4`
+
+**After deleting 1 copy**:
+- 2 active copies remain
+- Creating a new one shows: `"cantidadRepetidas": 3`
+- The deleted copy is not counted in duplicate detection
+
+<Note>
+  Duplicate detection only counts active stickers. Deleted stickers are excluded from duplicate counts.
+</Note>
+
+## Idempotency
+
+<Warning>
+  Deleting an already-deleted sticker succeeds without error. The operation is idempotent.
+</Warning>
+
+Example:
+
+```bash
+# First delete
+curl -X DELETE https://api.example.com/api/laminas/101
+# Response: Success
+
+# Second delete (sticker already inactive)
+curl -X DELETE https://api.example.com/api/laminas/101
+# Response: Success (no error)
+```
+
+## Cannot Be Undone via API
+
+<Warning>
+  There is no built-in restore/undelete endpoint. Once a sticker is marked as inactive, you cannot reactivate it through the API.
+</Warning>
+
+To "restore" a deleted sticker, you would need to:
+1. Get the deleted sticker's details via `GET /api/laminas/{id}`
+2. Create a new sticker with the same information via `POST /api/laminas`
+3. This creates a new sticker with a different ID
+
+Alternatively, direct database access would be required to set `active = true`.
+
+## Use Cases
+
+### Remove Duplicates
+
+If you have too many copies of a sticker, you can delete the extras:
+
+```bash
+# You have 5 copies of "Messi" (IDs: 101, 102, 103, 104, 105)
+# Keep 2 for trading, delete 3
+
+curl -X DELETE https://api.example.com/api/laminas/103
+curl -X DELETE https://api.example.com/api/laminas/104
+curl -X DELETE https://api.example.com/api/laminas/105
+
+# Now you have 2 active copies
+```
+
+### Correct Mistakes
+
+If you accidentally added the wrong sticker:
+
+```bash
+# Accidentally added "Wrong Player"
+curl -X DELETE https://api.example.com/api/laminas/106
+
+# Add the correct one
+curl -X POST https://api.example.com/api/laminas \
+  -d '{"albumId": 1, "nombre": "Correct Player", ...}'
+```
+
+### Clean Up Collection
+
+Remove stickers you no longer want to track:
+
+```bash
+# Delete all damaged or unwanted stickers
+curl -X DELETE https://api.example.com/api/laminas/107
+curl -X DELETE https://api.example.com/api/laminas/108
+```
+
+## Bulk Deletion
+
+<Note>
+  There is no bulk delete endpoint. To delete multiple stickers, you must make individual DELETE requests for each one.
+</Note>
+
+Example script (bash):
+
+```bash
+#!/bin/bash
+# Delete stickers 101-105
+
+for id in {101..105}; do
+  curl -X DELETE https://api.example.com/api/laminas/$id
+  echo "Deleted sticker $id"
+done
+```
+
+## Database Considerations
+
+Soft deletes are useful because:
+
+1. **Data Preservation**: Original data is not lost
+2. **Audit Trail**: You can track what was deleted and when via `updatedAt`
+3. **Recovery**: Database administrators can restore data if needed
+4. **Analytics**: Historical data remains available for reporting
+
+## Alternative: Update Instead
+
+If you want to modify a sticker rather than delete it, consider using the update endpoint:
+
+```bash
+# Instead of deleting
+curl -X DELETE https://api.example.com/api/laminas/101
+
+# Update it
+curl -X PUT https://api.example.com/api/laminas/101 \
+  -H "Content-Type: application/json" \
+  -d '{"albumId": 1, "nombre": "Updated Name", ...}'
+```
+
+## See Also
+
+- [Get Sticker](/api/laminas/get) - Verify deletion by checking the active status
+- [List Stickers](/api/laminas/list) - Confirm deleted stickers don't appear in lists
+- [Create Sticker](/api/laminas/create) - Add a replacement sticker if needed

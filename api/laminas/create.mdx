@@ -1,0 +1,274 @@
+---
+title: 'Create Sticker'
+api: 'POST /api/laminas'
+description: 'Add a single sticker with catalog validation and duplicate detection'
+---
+
+## Overview
+
+This endpoint allows you to add a single sticker to an album. The API validates that:
+
+1. The album exists
+2. The album has a catalog defined
+3. The sticker exists in the catalog
+
+If the sticker already exists in your collection, it will still be added but marked as a duplicate.
+
+## Request Body
+
+<ParamField body="albumId" type="number" required>
+  The ID of the album to add the sticker to
+</ParamField>
+
+<ParamField body="nombre" type="string" required>
+  The name of the sticker. Must match a sticker in the album's catalog.
+  
+  <Note>Sticker names are case-sensitive and must exactly match the catalog entry.</Note>
+</ParamField>
+
+<ParamField body="imagen" type="string">
+  URL or path to the sticker image
+</ParamField>
+
+<ParamField body="fechaLanzamiento" type="string" required>
+  Release date of the sticker in ISO 8601 format (YYYY-MM-DD)
+  
+  Example: `"2024-01-15"`
+</ParamField>
+
+<ParamField body="tipoLamina" type="string" required>
+  The type/category of the sticker
+  
+  Examples: `"normal"`, `"especial"`, `"holográfica"`
+</ParamField>
+
+## Response
+
+<ResponseField name="success" type="boolean">
+  Indicates if the operation was successful
+</ResponseField>
+
+<ResponseField name="message" type="string">
+  Success message indicating if the sticker was added as new or duplicate
+  
+  - New sticker: `"Lámina agregada"`
+  - Duplicate: `"Lámina agregada (repetida: X copias totales)"`
+</ResponseField>
+
+<ResponseField name="data" type="object">
+  <ResponseField name="esRepetida" type="boolean">
+    `true` if this sticker already exists in your collection, `false` if it's new
+  </ResponseField>
+  
+  <ResponseField name="estaEnCatalogo" type="boolean">
+    Always `true` (stickers not in catalog are rejected)
+  </ResponseField>
+  
+  <ResponseField name="cantidadRepetidas" type="number">
+    Total number of copies you now have of this sticker (including the newly added one)
+  </ResponseField>
+  
+  <ResponseField name="lamina" type="object">
+    <ResponseField name="id" type="number">
+      Unique identifier for the newly created sticker
+    </ResponseField>
+    
+    <ResponseField name="nombre" type="string">
+      Sticker name
+    </ResponseField>
+    
+    <ResponseField name="imagen" type="string">
+      Sticker image URL
+    </ResponseField>
+    
+    <ResponseField name="fechaLanzamiento" type="string">
+      Release date in ISO 8601 format
+    </ResponseField>
+    
+    <ResponseField name="tipoLamina" type="string">
+      Sticker type
+    </ResponseField>
+    
+    <ResponseField name="createdAt" type="string">
+      Timestamp when the sticker was created
+    </ResponseField>
+    
+    <ResponseField name="updatedAt" type="string">
+      Timestamp when the sticker was last updated
+    </ResponseField>
+    
+    <ResponseField name="active" type="boolean">
+      Whether the sticker is active (always `true` for new stickers)
+    </ResponseField>
+    
+    <ResponseField name="album" type="object">
+      <ResponseField name="id" type="number">
+        Album ID
+      </ResponseField>
+      
+      <ResponseField name="nombre" type="string">
+        Album name
+      </ResponseField>
+      
+      <ResponseField name="year" type="number">
+        Album year
+      </ResponseField>
+    </ResponseField>
+  </ResponseField>
+</ResponseField>
+
+<ResponseField name="timestamp" type="string">
+  ISO 8601 timestamp of the response
+</ResponseField>
+
+## Examples
+
+### Adding a New Sticker
+
+<CodeGroup>
+```bash cURL
+curl -X POST https://api.example.com/api/laminas \
+  -H "Content-Type: application/json" \
+  -d '{
+    "albumId": 1,
+    "nombre": "Lionel Messi",
+    "imagen": "https://example.com/images/messi.jpg",
+    "fechaLanzamiento": "2024-01-15",
+    "tipoLamina": "especial"
+  }'
+```
+
+```json Response (New Sticker)
+{
+  "success": true,
+  "message": "Lámina agregada",
+  "data": {
+    "esRepetida": false,
+    "estaEnCatalogo": true,
+    "cantidadRepetidas": 1,
+    "lamina": {
+      "id": 42,
+      "nombre": "Lionel Messi",
+      "imagen": "https://example.com/images/messi.jpg",
+      "fechaLanzamiento": "2024-01-15",
+      "tipoLamina": "especial",
+      "createdAt": "2026-03-12T10:30:00",
+      "updatedAt": "2026-03-12T10:30:00",
+      "active": true,
+      "album": {
+        "id": 1,
+        "nombre": "FIFA World Cup Qatar 2022",
+        "year": 2022
+      }
+    }
+  },
+  "timestamp": "2026-03-12T10:30:00"
+}
+```
+</CodeGroup>
+
+### Adding a Duplicate Sticker
+
+<CodeGroup>
+```bash cURL
+curl -X POST https://api.example.com/api/laminas \
+  -H "Content-Type: application/json" \
+  -d '{
+    "albumId": 1,
+    "nombre": "Lionel Messi",
+    "imagen": "https://example.com/images/messi.jpg",
+    "fechaLanzamiento": "2024-01-15",
+    "tipoLamina": "especial"
+  }'
+```
+
+```json Response (Duplicate)
+{
+  "success": true,
+  "message": "Lámina agregada (repetida: 2 copias totales)",
+  "data": {
+    "esRepetida": true,
+    "estaEnCatalogo": true,
+    "cantidadRepetidas": 2,
+    "lamina": {
+      "id": 43,
+      "nombre": "Lionel Messi",
+      "imagen": "https://example.com/images/messi.jpg",
+      "fechaLanzamiento": "2024-01-15",
+      "tipoLamina": "especial",
+      "createdAt": "2026-03-12T10:35:00",
+      "updatedAt": "2026-03-12T10:35:00",
+      "active": true,
+      "album": {
+        "id": 1,
+        "nombre": "FIFA World Cup Qatar 2022",
+        "year": 2022
+      }
+    }
+  },
+  "timestamp": "2026-03-12T10:35:00"
+}
+```
+</CodeGroup>
+
+## Error Responses
+
+### Missing Album ID
+
+```json
+{
+  "success": false,
+  "message": "El album_id es obligatorio en POST individual /api/laminas",
+  "errorCode": "VALIDATION_ERROR",
+  "timestamp": "2026-03-12T10:30:00"
+}
+```
+
+### No Catalog Defined
+
+```json
+{
+  "success": false,
+  "message": "Debe crear un catálogo de láminas primero",
+  "timestamp": "2026-03-12T10:30:00"
+}
+```
+
+### Sticker Not in Catalog
+
+```json
+{
+  "success": false,
+  "message": "❌ ERROR: La lámina 'Cristiano Ronaldo' NO existe en el catálogo del álbum. Solo puedes agregar láminas que están definidas en el catálogo.",
+  "timestamp": "2026-03-12T10:30:00"
+}
+```
+
+### Album Not Found
+
+```json
+{
+  "success": false,
+  "message": "Álbum with ID 999 not found",
+  "timestamp": "2026-03-12T10:30:00"
+}
+```
+
+## Duplicate Detection Logic
+
+The duplicate detection works as follows:
+
+1. The API searches for existing stickers with the same `nombre` in the same album
+2. If found, `esRepetida` is set to `true`
+3. `cantidadRepetidas` counts all copies including the new one
+4. The sticker is still created - duplicates are allowed for trading purposes
+
+<Note>
+  Duplicate detection is based on sticker name only. Two stickers with the same name are considered duplicates even if other fields differ.
+</Note>
+
+## See Also
+
+- [Bulk Upload](/api/laminas/bulk-upload) - Add multiple stickers at once
+- [List Stickers](/api/laminas/list) - View your sticker collection
+- [Get Sticker](/api/laminas/get) - Get details of a specific sticker

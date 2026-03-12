@@ -1,0 +1,260 @@
+---
+title: 'Get Catalog'
+api: 'GET /api/albums/{albumId}/catalogo'
+description: 'Retrieve all stickers available in an album catalog'
+icon: 'list'
+---
+
+## Overview
+
+Retrieves the complete list of stickers available in a catalog. This shows all possible stickers that can be collected for the album, regardless of whether the user possesses them.
+
+## Endpoint
+
+```
+GET /api/albums/{albumId}/catalogo
+```
+
+## Path Parameters
+
+<ParamField path="albumId" type="long" required>
+  The unique identifier of the album whose catalog you want to retrieve
+</ParamField>
+
+## Response
+
+<ResponseField name="success" type="boolean">
+  Indicates if the operation was successful
+</ResponseField>
+
+<ResponseField name="message" type="string">
+  Human-readable success message
+  
+  **Example**: "Catálogo obtenido: 638 láminas disponibles"
+</ResponseField>
+
+<ResponseField name="data" type="array">
+  Array of all catalog entries for the album
+  
+  <ResponseField name="data[].id" type="long">
+    Unique identifier of the catalog entry
+  </ResponseField>
+  
+  <ResponseField name="data[].nombre" type="string">
+    Name or identifier of the sticker
+  </ResponseField>
+  
+  <ResponseField name="data[].imagen" type="string">
+    URL to the sticker image (may be null)
+  </ResponseField>
+  
+  <ResponseField name="data[].fechaLanzamiento" type="date">
+    Release date in ISO 8601 format (YYYY-MM-DD)
+  </ResponseField>
+  
+  <ResponseField name="data[].tipoLamina" type="string">
+    Type or category of the sticker
+    
+    **Examples**: "común", "especial", "dorada", "bronce"
+  </ResponseField>
+  
+  <ResponseField name="data[].createdAt" type="datetime">
+    Timestamp when the catalog entry was created
+  </ResponseField>
+  
+  <ResponseField name="data[].updatedAt" type="datetime">
+    Timestamp when the catalog entry was last updated
+  </ResponseField>
+  
+  <ResponseField name="data[].active" type="boolean">
+    Indicates if the catalog entry is active (should always be true)
+  </ResponseField>
+</ResponseField>
+
+<ResponseField name="timestamp" type="datetime">
+  Server timestamp of the response
+</ResponseField>
+
+## Code Examples
+
+<CodeGroup>
+
+```bash cURL
+curl -X GET https://api.example.com/api/albums/1/catalogo \
+  -H "Accept: application/json"
+```
+
+```javascript JavaScript
+const response = await fetch('https://api.example.com/api/albums/1/catalogo', {
+  method: 'GET',
+  headers: {
+    'Accept': 'application/json'
+  }
+});
+
+const data = await response.json();
+console.log(`Total stickers in catalog: ${data.data.length}`);
+```
+
+```python Python
+import requests
+
+url = 'https://api.example.com/api/albums/1/catalogo'
+headers = {'Accept': 'application/json'}
+
+response = requests.get(url, headers=headers)
+data = response.json()
+
+print(f"Total stickers in catalog: {len(data['data'])}")
+```
+
+```java Java
+ResponseEntity<ApiResponseDTO<List<LaminaCatalogoResponseDTO>>> response = 
+    laminaController.obtenerCatalogo(1L);
+
+List<LaminaCatalogoResponseDTO> catalogo = response.getBody().getData();
+System.out.println("Total stickers: " + catalogo.size());
+```
+
+</CodeGroup>
+
+## Response Example
+
+```json
+{
+  "success": true,
+  "message": "Catálogo obtenido: 638 láminas disponibles",
+  "data": [
+    {
+      "id": 1,
+      "nombre": "ARG-1",
+      "imagen": "https://example.com/stickers/arg1.jpg",
+      "fechaLanzamiento": "2022-11-20",
+      "tipoLamina": "común",
+      "createdAt": "2022-10-01T08:00:00",
+      "updatedAt": "2022-10-01T08:00:00",
+      "active": true
+    },
+    {
+      "id": 2,
+      "nombre": "Lionel Messi",
+      "imagen": "https://example.com/stickers/messi.jpg",
+      "fechaLanzamiento": "2022-11-20",
+      "tipoLamina": "dorada",
+      "createdAt": "2022-10-01T08:00:01",
+      "updatedAt": "2022-10-01T08:00:01",
+      "active": true
+    },
+    {
+      "id": 3,
+      "nombre": "ARG-2",
+      "imagen": null,
+      "fechaLanzamiento": "2022-11-20",
+      "tipoLamina": "común",
+      "createdAt": "2022-10-01T08:00:02",
+      "updatedAt": "2022-10-01T08:00:02",
+      "active": true
+    }
+  ],
+  "timestamp": "2026-03-12T10:30:00"
+}
+```
+
+## Error Responses
+
+### Album Not Found (404)
+
+```json
+{
+  "success": false,
+  "message": "Álbum no encontrado con ID: 999",
+  "errorCode": "RESOURCE_NOT_FOUND",
+  "timestamp": "2026-03-12T10:30:00"
+}
+```
+
+### Empty Catalog (200)
+
+If the album exists but has no catalog yet:
+
+```json
+{
+  "success": true,
+  "message": "Catálogo obtenido: 0 láminas disponibles",
+  "data": [],
+  "timestamp": "2026-03-12T10:30:00"
+}
+```
+
+<Warning>
+  An empty catalog means you need to [create the catalog](/api/catalog/create) first before users can add stickers.
+</Warning>
+
+## Use Cases
+
+### 1. Display Available Stickers
+
+Show users all stickers they can potentially collect:
+
+```javascript
+const catalog = await fetchCatalog(albumId);
+const stickerGrid = catalog.data.map(sticker => ({
+  id: sticker.id,
+  name: sticker.nombre,
+  image: sticker.imagen,
+  type: sticker.tipoLamina
+}));
+```
+
+### 2. Validate Sticker Names
+
+Before adding a sticker, verify it exists in the catalog:
+
+```javascript
+const catalog = await fetchCatalog(albumId);
+const validNames = catalog.data.map(s => s.nombre);
+
+if (!validNames.includes(stickerName)) {
+  console.error('Sticker not in catalog!');
+}
+```
+
+### 3. Filter by Type
+
+Group stickers by type for better organization:
+
+```python
+catalog = requests.get(f'{base_url}/api/albums/{album_id}/catalogo').json()
+
+by_type = {}
+for sticker in catalog['data']:
+    tipo = sticker['tipoLamina']
+    if tipo not in by_type:
+        by_type[tipo] = []
+    by_type[tipo].append(sticker)
+
+print(f"Common stickers: {len(by_type.get('común', []))}")
+print(f"Special stickers: {len(by_type.get('dorada', []))}")
+```
+
+## Implementation Details
+
+The catalog retrieval logic is implemented in `LaminaService.java:152-161`:
+
+1. **Validates album exists**: Throws `ResourceNotFoundException` if album ID is invalid
+2. **Queries active entries**: Uses `findByAlbumAndActiveTrue` to get only active catalog entries
+3. **Maps to DTOs**: Converts `LaminaCatalogo` entities to `LaminaCatalogoResponseDTO`
+4. **Returns complete list**: No pagination - returns all catalog entries
+
+## Performance Considerations
+
+- This endpoint returns the **complete catalog** without pagination
+- For albums with thousands of stickers, consider implementing pagination
+- Response size grows linearly with catalog size
+- Consider caching the catalog on the client side as it rarely changes
+
+## Related Endpoints
+
+- [Create Catalog](/api/catalog/create) - Initialize the catalog
+- [Get Status](/api/catalog/status) - See which stickers the user has/needs
+- [Add Sticker](/api/laminas/create) - Add a sticker from the catalog to collection

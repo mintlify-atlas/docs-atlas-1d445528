@@ -1,0 +1,353 @@
+---
+title: 'Update Sticker'
+api: 'PUT /api/laminas/{id}'
+description: 'Modify the information of an existing sticker'
+---
+
+## Overview
+
+Update the details of an existing sticker. You can modify the name, image, release date, type, and even move it to a different album.
+
+<Warning>
+  When updating a sticker's name, be aware that this may affect duplicate tracking. The system identifies duplicates by name, so changing the name will make it appear as a different sticker.
+</Warning>
+
+## Path Parameters
+
+<ParamField path="id" type="number" required>
+  The unique ID of the sticker to update
+</ParamField>
+
+## Request Body
+
+<ParamField body="albumId" type="number" required>
+  The ID of the album this sticker belongs to (can be changed to move the sticker)
+</ParamField>
+
+<ParamField body="nombre" type="string" required>
+  The name of the sticker
+  
+  <Note>Changing the name will affect duplicate detection and tracking</Note>
+</ParamField>
+
+<ParamField body="imagen" type="string">
+  URL or path to the sticker image
+</ParamField>
+
+<ParamField body="fechaLanzamiento" type="string" required>
+  Release date of the sticker in ISO 8601 format (YYYY-MM-DD)
+  
+  Example: `"2024-01-15"`
+</ParamField>
+
+<ParamField body="tipoLamina" type="string" required>
+  The type/category of the sticker
+  
+  Examples: `"normal"`, `"especial"`, `"holográfica"`
+</ParamField>
+
+## Response
+
+<ResponseField name="success" type="boolean">
+  Indicates if the operation was successful
+</ResponseField>
+
+<ResponseField name="message" type="string">
+  Success message
+  
+  Example: `"Lámina actualizada correctamente"`
+</ResponseField>
+
+<ResponseField name="data" type="object">
+  The updated sticker object
+  
+  <ResponseField name="id" type="number">
+    Sticker ID (unchanged)
+  </ResponseField>
+  
+  <ResponseField name="nombre" type="string">
+    Updated sticker name
+  </ResponseField>
+  
+  <ResponseField name="imagen" type="string">
+    Updated sticker image URL
+  </ResponseField>
+  
+  <ResponseField name="fechaLanzamiento" type="string">
+    Updated release date in ISO 8601 format
+  </ResponseField>
+  
+  <ResponseField name="tipoLamina" type="string">
+    Updated sticker type
+  </ResponseField>
+  
+  <ResponseField name="createdAt" type="string">
+    Original creation timestamp (unchanged)
+  </ResponseField>
+  
+  <ResponseField name="updatedAt" type="string">
+    Updated to current timestamp
+  </ResponseField>
+  
+  <ResponseField name="active" type="boolean">
+    Whether the sticker is active (unchanged by update)
+  </ResponseField>
+  
+  <ResponseField name="album" type="object">
+    Updated album information (if changed)
+    
+    <ResponseField name="album.id" type="number">
+      Album ID
+    </ResponseField>
+    
+    <ResponseField name="album.nombre" type="string">
+      Album name
+    </ResponseField>
+    
+    <ResponseField name="album.year" type="number">
+      Album year
+    </ResponseField>
+  </ResponseField>
+</ResponseField>
+
+<ResponseField name="timestamp" type="string">
+  ISO 8601 timestamp of the response
+</ResponseField>
+
+## Examples
+
+### Update Sticker Details
+
+<CodeGroup>
+```bash cURL
+curl -X PUT https://api.example.com/api/laminas/101 \
+  -H "Content-Type: application/json" \
+  -d '{
+    "albumId": 1,
+    "nombre": "Lionel Messi - Updated",
+    "imagen": "https://example.com/images/messi-new.jpg",
+    "fechaLanzamiento": "2024-01-20",
+    "tipoLamina": "holográfica"
+  }'
+```
+
+```json Response
+{
+  "success": true,
+  "message": "Lámina actualizada correctamente",
+  "data": {
+    "id": 101,
+    "nombre": "Lionel Messi - Updated",
+    "imagen": "https://example.com/images/messi-new.jpg",
+    "fechaLanzamiento": "2024-01-20",
+    "tipoLamina": "holográfica",
+    "createdAt": "2026-03-12T10:30:00",
+    "updatedAt": "2026-03-12T14:45:00",
+    "active": true,
+    "album": {
+      "id": 1,
+      "nombre": "FIFA World Cup Qatar 2022",
+      "year": 2022
+    }
+  },
+  "timestamp": "2026-03-12T14:45:00"
+}
+```
+</CodeGroup>
+
+### Move Sticker to Different Album
+
+<CodeGroup>
+```bash cURL
+curl -X PUT https://api.example.com/api/laminas/101 \
+  -H "Content-Type: application/json" \
+  -d '{
+    "albumId": 2,
+    "nombre": "Lionel Messi",
+    "imagen": "https://example.com/images/messi.jpg",
+    "fechaLanzamiento": "2024-01-15",
+    "tipoLamina": "especial"
+  }'
+```
+
+```json Response
+{
+  "success": true,
+  "message": "Lámina actualizada correctamente",
+  "data": {
+    "id": 101,
+    "nombre": "Lionel Messi",
+    "imagen": "https://example.com/images/messi.jpg",
+    "fechaLanzamiento": "2024-01-15",
+    "tipoLamina": "especial",
+    "createdAt": "2026-03-12T10:30:00",
+    "updatedAt": "2026-03-12T15:00:00",
+    "active": true,
+    "album": {
+      "id": 2,
+      "nombre": "UEFA Champions League 2023-24",
+      "year": 2023
+    }
+  },
+  "timestamp": "2026-03-12T15:00:00"
+}
+```
+</CodeGroup>
+
+### Update Only Image URL
+
+<CodeGroup>
+```bash cURL
+curl -X PUT https://api.example.com/api/laminas/101 \
+  -H "Content-Type: application/json" \
+  -d '{
+    "albumId": 1,
+    "nombre": "Lionel Messi",
+    "imagen": "https://example.com/images/messi-hd.jpg",
+    "fechaLanzamiento": "2024-01-15",
+    "tipoLamina": "especial"
+  }'
+```
+
+```json Response
+{
+  "success": true,
+  "message": "Lámina actualizada correctamente",
+  "data": {
+    "id": 101,
+    "nombre": "Lionel Messi",
+    "imagen": "https://example.com/images/messi-hd.jpg",
+    "fechaLanzamiento": "2024-01-15",
+    "tipoLamina": "especial",
+    "createdAt": "2026-03-12T10:30:00",
+    "updatedAt": "2026-03-12T15:15:00",
+    "active": true,
+    "album": {
+      "id": 1,
+      "nombre": "FIFA World Cup Qatar 2022",
+      "year": 2022
+    }
+  },
+  "timestamp": "2026-03-12T15:15:00"
+}
+```
+</CodeGroup>
+
+## Error Responses
+
+### Sticker Not Found
+
+```json
+{
+  "success": false,
+  "message": "Lámina with ID 999 not found",
+  "timestamp": "2026-03-12T14:45:00"
+}
+```
+
+### Album Not Found
+
+```json
+{
+  "success": false,
+  "message": "Álbum with ID 999 not found",
+  "timestamp": "2026-03-12T14:45:00"
+}
+```
+
+### Missing Required Fields
+
+```json
+{
+  "success": false,
+  "message": "Validation failed",
+  "errors": [
+    {
+      "field": "nombre",
+      "message": "El nombre de la lámina es obligatorio"
+    },
+    {
+      "field": "fechaLanzamiento",
+      "message": "La fecha de lanzamiento es obligatoria"
+    }
+  ],
+  "timestamp": "2026-03-12T14:45:00"
+}
+```
+
+### Invalid Album ID
+
+```json
+{
+  "success": false,
+  "message": "Álbum with ID 999 not found",
+  "timestamp": "2026-03-12T14:45:00"
+}
+```
+
+## Important Notes
+
+### Catalog Validation
+
+<Warning>
+  The update endpoint does NOT validate against the catalog. You can update a sticker to have a name that doesn't exist in the catalog. This is different from the create endpoint.
+</Warning>
+
+### Duplicate Impact
+
+Changing a sticker's name affects duplicate tracking:
+
+- **Before**: You have 3 copies of "Lionel Messi"
+- **Update one to**: "Lionel Messi - Special Edition"
+- **After**: You have 2 copies of "Lionel Messi" and 1 copy of "Lionel Messi - Special Edition"
+
+### Moving Between Albums
+
+When changing the `albumId`:
+- The sticker is moved to the new album
+- No validation is performed to check if the sticker name exists in the new album's catalog
+- Duplicate counts are album-specific, so moving to a different album resets the duplicate context
+
+### Updating Deleted Stickers
+
+<Note>
+  You can update stickers that have been soft-deleted (active = false). The update operation does not change the active status.
+</Note>
+
+To reactivate a deleted sticker, you would need to:
+1. Get the sticker by ID
+2. Update its fields
+3. The sticker remains inactive unless you have a separate endpoint to restore it
+
+## Timestamp Behavior
+
+- **createdAt**: Never changes, preserves original creation time
+- **updatedAt**: Automatically updated to the current timestamp on every update
+
+Use `updatedAt` to:
+- Track when changes were made
+- Implement "recently updated" features
+- Audit modification history
+
+## Validation Rules
+
+All fields from the create endpoint apply:
+
+1. **nombre**: Required, cannot be blank
+2. **fechaLanzamiento**: Required, must be a valid ISO 8601 date
+3. **tipoLamina**: Required, cannot be blank
+4. **albumId**: Required, must reference an existing album
+5. **imagen**: Optional
+
+## Best Practices
+
+1. **Always provide all fields**: Even if you're only changing one field, include all required fields in the request
+2. **Verify album exists**: Before changing `albumId`, ensure the target album exists
+3. **Be cautious with name changes**: Remember that changing names affects duplicate tracking
+4. **Check updatedAt**: Use this field to detect conflicts if multiple users might update the same sticker
+
+## See Also
+
+- [Get Sticker](/api/laminas/get) - Retrieve current sticker details before updating
+- [Create Sticker](/api/laminas/create) - Add a new sticker instead of updating
+- [Delete Sticker](/api/laminas/delete) - Remove a sticker from your collection

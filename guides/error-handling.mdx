@@ -1,0 +1,365 @@
+---
+title: 'Error Handling'
+description: 'Understand how errors are handled and returned in the Album Collection Manager API'
+icon: 'triangle-exclamation'
+---
+
+## Overview
+
+The Album Collection Manager API uses a standardized error response format powered by `GlobalExceptionHandler` and wrapped in `ApiResponseDTO` for consistent error reporting across all endpoints.
+
+## Error Response Format
+
+All error responses follow this structure:
+
+```json
+{
+  "success": false,
+  "message": "Human-readable error description",
+  "errorCode": "ERROR_CODE_IDENTIFIER",
+  "errors": {
+    "fieldName": "Field-specific error details"
+  },
+  "timestamp": "2026-03-12T10:30:45.123"
+}
+```
+
+### Response Fields
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `success` | boolean | Always `false` for error responses |
+| `message` | string | Human-readable error message |
+| `errorCode` | string | Machine-readable error identifier |
+| `errors` | object | Optional field-level error details |
+| `timestamp` | string | ISO 8601 timestamp of when the error occurred |
+
+<Note>
+  The `errors` field is only included for validation errors and type mismatch errors that affect specific fields.
+</Note>
+
+## Error Codes and HTTP Status Codes
+
+The API uses specific error codes mapped to appropriate HTTP status codes:
+
+### 400 Bad Request
+
+<AccordionGroup>
+  <Accordion title="VALIDATION_ERROR" icon="check-circle">
+    **Trigger**: Request body fails validation constraints (e.g., `@NotNull`, `@Size`, `@Min`)
+    
+    **Example Response**:
+    ```json
+    {
+      "success": false,
+      "message": "Error de validación en los datos enviados",
+      "errorCode": "VALIDATION_ERROR",
+      "errors": {
+        "nombre": "no debe estar vacío",
+        "year": "debe ser mayor o igual a 1900"
+      },
+      "timestamp": "2026-03-12T10:30:45.123"
+    }
+    ```
+    
+    **Handler**: `handleMethodArgumentNotValid()` in `GlobalExceptionHandler.java:66`
+  </Accordion>
+
+  <Accordion title="INVALID_PARAMETER_TYPE" icon="hashtag">
+    **Trigger**: Path or query parameter has incorrect type (e.g., string instead of number)
+    
+    **Example Response**:
+    ```json
+    {
+      "success": false,
+      "message": "Parámetro inválido: id",
+      "errorCode": "INVALID_PARAMETER_TYPE",
+      "errors": {
+        "id": "Tipo inválido. Esperado: Long, Recibido: abc"
+      },
+      "timestamp": "2026-03-12T10:30:45.123"
+    }
+    ```
+    
+    **Handler**: `handleMethodArgumentTypeMismatch()` in `GlobalExceptionHandler.java:91`
+  </Accordion>
+
+  <Accordion title="INVALID_OPERATION" icon="ban">
+    **Trigger**: Business logic validation fails (custom exception)
+    
+    **Example Response**:
+    ```json
+    {
+      "success": false,
+      "message": "No se puede eliminar un álbum con láminas asociadas",
+      "errorCode": "INVALID_OPERATION",
+      "timestamp": "2026-03-12T10:30:45.123"
+    }
+    ```
+    
+    **Handler**: `handleInvalidOperationException()` in `GlobalExceptionHandler.java:49`
+  </Accordion>
+</AccordionGroup>
+
+### 404 Not Found
+
+<AccordionGroup>
+  <Accordion title="RESOURCE_NOT_FOUND" icon="magnifying-glass">
+    **Trigger**: Requested resource doesn't exist in database
+    
+    **Example Response**:
+    ```json
+    {
+      "success": false,
+      "message": "Album no encontrado con id: '999'",
+      "errorCode": "RESOURCE_NOT_FOUND",
+      "timestamp": "2026-03-12T10:30:45.123"
+    }
+    ```
+    
+    **Handler**: `handleResourceNotFoundException()` in `GlobalExceptionHandler.java:30`
+  </Accordion>
+
+  <Accordion title="ENDPOINT_NOT_FOUND" icon="route">
+    **Trigger**: API endpoint doesn't exist
+    
+    **Example Response**:
+    ```json
+    {
+      "success": false,
+      "message": "Endpoint no encontrado: GET /api/invalid",
+      "errorCode": "ENDPOINT_NOT_FOUND",
+      "errors": {
+        "metodo": "GET",
+        "ruta": "/api/invalid",
+        "tipo": "Endpoint no existe"
+      },
+      "timestamp": "2026-03-12T10:30:45.123"
+    }
+    ```
+    
+    **Handler**: `handleNoHandlerFound()` in `GlobalExceptionHandler.java:141`
+  </Accordion>
+
+  <Accordion title="INVALID_ENDPOINT" icon="circle-xmark">
+    **Trigger**: Custom endpoint validation fails
+    
+    **Example Response**:
+    ```json
+    {
+      "success": false,
+      "message": "Endpoint no soportado",
+      "errorCode": "INVALID_ENDPOINT",
+      "errors": {
+        "metodo": "POST",
+        "ruta": "/api/albums/1/invalid",
+        "tipo": "Endpoint inválido o no soportado"
+      },
+      "timestamp": "2026-03-12T10:30:45.123"
+    }
+    ```
+    
+    **Handler**: `handleEndpointNotFoundException()` in `GlobalExceptionHandler.java:164`
+  </Accordion>
+</AccordionGroup>
+
+### 409 Conflict
+
+<AccordionGroup>
+  <Accordion title="DATA_INTEGRITY_VIOLATION" icon="database">
+    **Trigger**: Database constraint violation (unique, foreign key, etc.)
+    
+    **Example Response**:
+    ```json
+    {
+      "success": false,
+      "message": "Ya existe un registro con estos datos (violación de unicidad)",
+      "errorCode": "DATA_INTEGRITY_VIOLATION",
+      "timestamp": "2026-03-12T10:30:45.123"
+    }
+    ```
+    
+    **Handler**: `handleDataIntegrityViolation()` in `GlobalExceptionHandler.java:119`
+  </Accordion>
+</AccordionGroup>
+
+### 500 Internal Server Error
+
+<AccordionGroup>
+  <Accordion title="INTERNAL_SERVER_ERROR" icon="server">
+    **Trigger**: Unexpected runtime or system errors
+    
+    **Example Response**:
+    ```json
+    {
+      "success": false,
+      "message": "Ocurrió un error interno. Intenta nuevamente más tarde.",
+      "errorCode": "INTERNAL_SERVER_ERROR",
+      "timestamp": "2026-03-12T10:30:45.123"
+    }
+    ```
+    
+    **Handlers**: 
+    - `handleRuntimeException()` in `GlobalExceptionHandler.java:191`
+    - `handleGlobalException()` in `GlobalExceptionHandler.java:207`
+  </Accordion>
+</AccordionGroup>
+
+## Throwing Custom Exceptions
+
+You can throw custom exceptions in your service layer that will be automatically handled:
+
+### ResourceNotFoundException
+
+```java
+// Source: src/main/java/ipss/web2/examen/exceptions/ResourceNotFoundException.java
+throw new ResourceNotFoundException("Album", "id", albumId);
+// Returns: "Album no encontrado con id: '123'"
+
+throw new ResourceNotFoundException("Album", "id", albumId, "ALBUM_NOT_FOUND");
+// Returns same message with custom error code
+```
+
+### InvalidOperationException
+
+```java
+// Source: src/main/java/ipss/web2/examen/exceptions/InvalidOperationException.java
+throw new InvalidOperationException("No se puede eliminar un álbum activo");
+
+throw new InvalidOperationException(
+    "Operación no permitida", 
+    "OPERATION_NOT_ALLOWED"
+);
+```
+
+### EndpointNotFoundException
+
+```java
+// Source: src/main/java/ipss/web2/examen/exceptions/EndpointNotFoundException.java
+throw new EndpointNotFoundException("POST", "/api/invalid");
+
+throw new EndpointNotFoundException("Endpoint no soportado en esta versión");
+```
+
+## Handling Errors in Client Code
+
+<CodeGroup>
+
+```javascript JavaScript
+try {
+  const response = await fetch('http://localhost:8080/api/albums/999');
+  const data = await response.json();
+  
+  if (!data.success) {
+    console.error(`Error [${data.errorCode}]: ${data.message}`);
+    
+    // Handle field-level errors
+    if (data.errors) {
+      Object.entries(data.errors).forEach(([field, error]) => {
+        console.error(`  - ${field}: ${error}`);
+      });
+    }
+  }
+} catch (error) {
+  console.error('Network error:', error);
+}
+```
+
+```python Python
+import requests
+
+try:
+    response = requests.get('http://localhost:8080/api/albums/999')
+    data = response.json()
+    
+    if not data.get('success'):
+        print(f"Error [{data['errorCode']}]: {data['message']}")
+        
+        # Handle field-level errors
+        if 'errors' in data:
+            for field, error in data['errors'].items():
+                print(f"  - {field}: {error}")
+except requests.exceptions.RequestException as e:
+    print(f"Network error: {e}")
+```
+
+```java Java
+try {
+    HttpResponse<String> response = client.send(request, 
+        HttpResponse.BodyHandlers.ofString());
+    
+    ObjectMapper mapper = new ObjectMapper();
+    ApiResponseDTO result = mapper.readValue(
+        response.body(), 
+        ApiResponseDTO.class
+    );
+    
+    if (!result.getSuccess()) {
+        System.err.println("Error [" + result.getErrorCode() + "]: " 
+            + result.getMessage());
+            
+        if (result.getErrors() != null) {
+            result.getErrors().forEach((field, error) -> 
+                System.err.println("  - " + field + ": " + error)
+            );
+        }
+    }
+} catch (Exception e) {
+    System.err.println("Network error: " + e.getMessage());
+}
+```
+
+</CodeGroup>
+
+## Best Practices
+
+<Steps>
+  <Step title="Always Check success Field">
+    Check the `success` boolean before processing response data:
+    ```javascript
+    if (response.success) {
+      // Process data
+    } else {
+      // Handle error
+    }
+    ```
+  </Step>
+
+  <Step title="Use Error Codes for Logic">
+    Use `errorCode` for programmatic error handling, not `message`:
+    ```javascript
+    if (data.errorCode === 'RESOURCE_NOT_FOUND') {
+      // Redirect to 404 page
+    } else if (data.errorCode === 'VALIDATION_ERROR') {
+      // Show validation errors in form
+    }
+    ```
+  </Step>
+
+  <Step title="Display Friendly Messages">
+    The `message` field is already user-friendly and localized (Spanish).
+    Display it directly to users or translate as needed.
+  </Step>
+
+  <Step title="Log Errors with Timestamp">
+    Include the `timestamp` when logging errors for debugging:
+    ```javascript
+    console.error(`[${data.timestamp}] ${data.errorCode}: ${data.message}`);
+    ```
+  </Step>
+</Steps>
+
+<Warning>
+  In production, sensitive error details are sanitized. Internal server errors return a generic message instead of stack traces.
+</Warning>
+
+## Related Resources
+
+<CardGroup cols={2}>
+  <Card title="API Reference" icon="book" href="/api/albums/overview">
+    View error responses for specific endpoints
+  </Card>
+  <Card title="Database Setup" icon="database" href="/guides/database-setup">
+    Configure database to prevent integrity violations
+  </Card>
+</CardGroup>

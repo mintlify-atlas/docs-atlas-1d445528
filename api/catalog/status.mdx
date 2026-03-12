@@ -1,0 +1,342 @@
+---
+title: 'Get Status'
+api: 'GET /api/albums/{albumId}/catalogo/estado'
+description: 'View collection statistics including possessed, missing, and repeated stickers'
+icon: 'chart-pie'
+---
+
+## Overview
+
+Returns comprehensive statistics about a user's sticker collection for a specific album. This endpoint shows:
+
+- **Possessed stickers**: All stickers the user has collected
+- **Missing stickers**: Stickers from the catalog the user still needs
+- **Repeated stickers**: Stickers the user has multiple copies of
+- **Collection statistics**: Total counts for quick progress tracking
+
+## Endpoint
+
+```
+GET /api/albums/{albumId}/catalogo/estado
+```
+
+## Path Parameters
+
+<ParamField path="albumId" type="long" required>
+  The unique identifier of the album
+</ParamField>
+
+## Response
+
+<ResponseField name="success" type="boolean">
+  Indicates if the operation was successful
+</ResponseField>
+
+<ResponseField name="message" type="string">
+  Human-readable success message
+  
+  **Example**: "Estado del álbum obtenido"
+</ResponseField>
+
+<ResponseField name="data" type="object">
+  Collection status object
+  
+  <ResponseField name="data.laminasPoseidas" type="array">
+    Array of all stickers the user currently possesses
+    
+    <ResponseField name="laminasPoseidas[].id" type="long">
+      Unique identifier of the possessed sticker
+    </ResponseField>
+    
+    <ResponseField name="laminasPoseidas[].nombre" type="string">
+      Name of the sticker
+    </ResponseField>
+    
+    <ResponseField name="laminasPoseidas[].imagen" type="string">
+      Image URL (may be null)
+    </ResponseField>
+    
+    <ResponseField name="laminasPoseidas[].fechaLanzamiento" type="date">
+      Release date
+    </ResponseField>
+    
+    <ResponseField name="laminasPoseidas[].tipoLamina" type="string">
+      Type of sticker
+    </ResponseField>
+    
+    <ResponseField name="laminasPoseidas[].album" type="object">
+      Basic album information
+    </ResponseField>
+  </ResponseField>
+  
+  <ResponseField name="data.laminasFaltantes" type="array">
+    Array of stickers from the catalog that the user doesn't have yet
+    
+    Structure matches `LaminaCatalogoResponseDTO` (id, nombre, imagen, fechaLanzamiento, tipoLamina, createdAt, updatedAt, active)
+  </ResponseField>
+  
+  <ResponseField name="data.laminasRepetidas" type="object">
+    Map of sticker names to their copy counts (only includes stickers with count > 1)
+    
+    **Example**: `{"Lionel Messi": 3, "ARG-5": 2}`
+  </ResponseField>
+  
+  <ResponseField name="data.totalLaminas" type="integer">
+    Total number of stickers the user possesses (including duplicates)
+  </ResponseField>
+  
+  <ResponseField name="data.laminasFaltantesTotal" type="integer">
+    Number of unique stickers still needed to complete the album
+  </ResponseField>
+  
+  <ResponseField name="data.laminasRepetidasTotal" type="integer">
+    Total count of all duplicate stickers
+  </ResponseField>
+</ResponseField>
+
+<ResponseField name="timestamp" type="datetime">
+  Server timestamp of the response
+</ResponseField>
+
+## Code Examples
+
+<CodeGroup>
+
+```bash cURL
+curl -X GET https://api.example.com/api/albums/1/catalogo/estado \
+  -H "Accept: application/json"
+```
+
+```javascript JavaScript
+const response = await fetch('https://api.example.com/api/albums/1/catalogo/estado', {
+  method: 'GET',
+  headers: {
+    'Accept': 'application/json'
+  }
+});
+
+const { data } = await response.json();
+
+// Calculate completion percentage
+const catalogSize = data.totalLaminas + data.laminasFaltantesTotal - data.laminasRepetidasTotal;
+const uniquePossessed = data.totalLaminas - data.laminasRepetidasTotal;
+const completion = (uniquePossessed / catalogSize) * 100;
+
+console.log(`Album completion: ${completion.toFixed(1)}%`);
+console.log(`Missing ${data.laminasFaltantesTotal} stickers`);
+console.log(`Have ${data.laminasRepetidasTotal} duplicates for trading`);
+```
+
+```python Python
+import requests
+
+response = requests.get('https://api.example.com/api/albums/1/catalogo/estado')
+data = response.json()['data']
+
+# Display status
+print(f"Total stickers: {data['totalLaminas']}")
+print(f"Still need: {data['laminasFaltantesTotal']}")
+print(f"Duplicates: {data['laminasRepetidasTotal']}")
+
+# Show which stickers are repeated
+for nombre, count in data['laminasRepetidas'].items():
+    print(f"  {nombre}: {count} copies")
+```
+
+```java Java
+ResponseEntity<ApiResponseDTO<LaminasEstadoDTO>> response = 
+    laminaController.obtenerEstado(1L);
+
+LaminasEstadoDTO estado = response.getBody().getData();
+
+System.out.println("Total possessed: " + estado.totalLaminas());
+System.out.println("Missing: " + estado.laminasFaltantesTotal());
+System.out.println("Duplicates: " + estado.laminasRepetidasTotal());
+
+// Process repeated stickers
+estado.laminasRepetidas().forEach((nombre, count) -> 
+    System.out.println(nombre + ": " + count + " copies")
+);
+```
+
+</CodeGroup>
+
+## Response Example
+
+```json
+{
+  "success": true,
+  "message": "Estado del álbum obtenido",
+  "data": {
+    "laminasPoseidas": [
+      {
+        "id": 101,
+        "nombre": "ARG-1",
+        "imagen": "https://example.com/stickers/arg1.jpg",
+        "fechaLanzamiento": "2022-11-20",
+        "tipoLamina": "común",
+        "createdAt": "2026-03-10T14:30:00",
+        "updatedAt": "2026-03-10T14:30:00",
+        "active": true,
+        "album": {
+          "id": 1,
+          "nombre": "FIFA World Cup Qatar 2022"
+        }
+      },
+      {
+        "id": 102,
+        "nombre": "Lionel Messi",
+        "imagen": "https://example.com/stickers/messi.jpg",
+        "fechaLanzamiento": "2022-11-20",
+        "tipoLamina": "dorada",
+        "createdAt": "2026-03-10T15:00:00",
+        "updatedAt": "2026-03-10T15:00:00",
+        "active": true,
+        "album": {
+          "id": 1,
+          "nombre": "FIFA World Cup Qatar 2022"
+        }
+      },
+      {
+        "id": 103,
+        "nombre": "Lionel Messi",
+        "imagen": "https://example.com/stickers/messi.jpg",
+        "fechaLanzamiento": "2022-11-20",
+        "tipoLamina": "dorada",
+        "createdAt": "2026-03-11T09:15:00",
+        "updatedAt": "2026-03-11T09:15:00",
+        "active": true,
+        "album": {
+          "id": 1,
+          "nombre": "FIFA World Cup Qatar 2022"
+        }
+      }
+    ],
+    "laminasFaltantes": [
+      {
+        "id": 2,
+        "nombre": "ARG-2",
+        "imagen": null,
+        "fechaLanzamiento": "2022-11-20",
+        "tipoLamina": "común",
+        "createdAt": "2022-10-01T08:00:02",
+        "updatedAt": "2022-10-01T08:00:02",
+        "active": true
+      },
+      {
+        "id": 3,
+        "nombre": "ARG-3",
+        "imagen": "https://example.com/stickers/arg3.jpg",
+        "fechaLanzamiento": "2022-11-20",
+        "tipoLamina": "común",
+        "createdAt": "2022-10-01T08:00:03",
+        "updatedAt": "2022-10-01T08:00:03",
+        "active": true
+      }
+    ],
+    "laminasRepetidas": {
+      "Lionel Messi": 2
+    },
+    "totalLaminas": 3,
+    "laminasFaltantesTotal": 2,
+    "laminasRepetidasTotal": 2
+  },
+  "timestamp": "2026-03-12T10:30:00"
+}
+```
+
+## Understanding the Statistics
+
+In the example above:
+
+- **Total stickers possessed**: 3 (including duplicates)
+- **Unique stickers possessed**: 2 (ARG-1, Lionel Messi)
+- **Missing stickers**: 2 (ARG-2, ARG-3)
+- **Repeated stickers**: 2 total copies (Lionel Messi appears 2 times)
+- **Album completion**: 2 / (2 + 2) = 50%
+
+## Error Responses
+
+### Album Not Found (404)
+
+```json
+{
+  "success": false,
+  "message": "Álbum no encontrado con ID: 999",
+  "errorCode": "RESOURCE_NOT_FOUND",
+  "timestamp": "2026-03-12T10:30:00"
+}
+```
+
+## Use Cases
+
+### 1. Progress Dashboard
+
+Display collection progress to users:
+
+```javascript
+const { data } = await fetchStatus(albumId);
+const catalogSize = data.totalLaminas + data.laminasFaltantesTotal - data.laminasRepetidasTotal;
+const uniquePossessed = data.totalLaminas - data.laminasRepetidasTotal;
+const percentage = (uniquePossessed / catalogSize) * 100;
+
+return {
+  completion: percentage,
+  needed: data.laminasFaltantesTotal,
+  forTrade: data.laminasRepetidasTotal
+};
+```
+
+### 2. Trading System
+
+Identify duplicates available for trading:
+
+```python
+status = get_status(album_id)
+for nombre, count in status['laminasRepetidas'].items():
+    if count > 1:
+        available_for_trade = count - 1  # Keep one copy
+        print(f"Can trade {available_for_trade} copies of {nombre}")
+```
+
+### 3. Wishlist Generation
+
+Create a list of needed stickers:
+
+```java
+LaminasEstadoDTO estado = getEstado(albumId);
+List<String> wishlist = estado.laminasFaltantes().stream()
+    .map(LaminaCatalogoResponseDTO::nombre)
+    .sorted()
+    .toList();
+```
+
+## Implementation Details
+
+The status calculation logic is in `LaminaService.java:104-149`:
+
+1. **Fetch catalog**: Gets all catalog entries for the album
+2. **Fetch possessed stickers**: Gets all stickers the user has added
+3. **Identify missing**: Finds catalog entries not in possessed list
+4. **Count duplicates**: Groups possessed stickers by name and filters for count > 1
+5. **Calculate totals**: Sums up statistics
+
+Key algorithm from `LaminaService.java:128-135`:
+
+```java
+// Count duplicates
+Map<String, Integer> laminasRepetidas = laminasPoseidas.stream()
+    .collect(Collectors.groupingBy(
+        Lamina::getNombre,
+        Collectors.summingInt(l -> 1)
+    ))
+    .entrySet().stream()
+    .filter(e -> e.getValue() > 1)  // Only keep if count > 1
+    .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+```
+
+## Related Endpoints
+
+- [Get Catalog](/api/catalog/get) - View all available stickers
+- [Add Sticker](/api/laminas/create) - Add stickers to reduce missing count
+- [Bulk Add Stickers](/api/laminas/bulk-upload) - Add multiple stickers at once

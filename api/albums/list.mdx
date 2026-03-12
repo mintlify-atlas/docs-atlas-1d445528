@@ -1,0 +1,149 @@
+---
+title: 'List Albums'
+api: 'GET /api/albums'
+description: 'Retrieve a paginated list of albums with optional filters'
+---
+
+## Query Parameters
+
+<ParamField query="page" type="integer" optional>
+  Page number for pagination (0-indexed).
+  
+  **Default:** 0
+</ParamField>
+
+<ParamField query="size" type="integer" optional>
+  Number of items per page.
+  
+  **Default:** 10
+</ParamField>
+
+<ParamField query="year" type="integer" optional>
+  Filter albums by release year.
+</ParamField>
+
+<ParamField query="active" type="boolean" optional>
+  Filter by active status.
+  
+  - `true` - Show only active albums
+  - `false` - Show only inactive albums
+  - omit - Show all albums
+</ParamField>
+
+## Response
+
+<ResponseField name="success" type="boolean">
+  Indicates if the request was successful
+</ResponseField>
+
+<ResponseField name="message" type="string">
+  Response message: "Álbumes recuperados exitosamente"
+</ResponseField>
+
+<ResponseField name="data" type="object">
+  Paginated album data
+  
+  <ResponseField name="data.content" type="array">
+    Array of album objects
+    
+    <ResponseField name="content[].id" type="long">
+      Unique identifier for the album
+    </ResponseField>
+    
+    <ResponseField name="content[].nombre" type="string">
+      Album name
+    </ResponseField>
+    
+    <ResponseField name="content[].year" type="integer">
+      Release year
+    </ResponseField>
+    
+    <ResponseField name="content[].descripcion" type="string">
+      Album description
+    </ResponseField>
+    
+    <ResponseField name="content[].createdAt" type="string">
+      ISO 8601 timestamp of creation
+    </ResponseField>
+    
+    <ResponseField name="content[].updatedAt" type="string">
+      ISO 8601 timestamp of last update
+    </ResponseField>
+  </ResponseField>
+  
+  <ResponseField name="data.page" type="integer">
+    Current page number (0-indexed)
+  </ResponseField>
+  
+  <ResponseField name="data.size" type="integer">
+    Number of items per page
+  </ResponseField>
+  
+  <ResponseField name="data.totalElements" type="long">
+    Total number of albums matching the criteria
+  </ResponseField>
+  
+  <ResponseField name="data.totalPages" type="integer">
+    Total number of pages
+  </ResponseField>
+</ResponseField>
+
+<ResponseField name="timestamp" type="string">
+  ISO 8601 timestamp of the response
+</ResponseField>
+
+## Example Requests
+
+```bash Basic List
+curl -X GET http://localhost:8080/api/albums
+```
+
+```bash With Pagination
+curl -X GET "http://localhost:8080/api/albums?page=0&size=20"
+```
+
+```bash Filter by Year
+curl -X GET "http://localhost:8080/api/albums?year=2022"
+```
+
+```bash Filter by Active Status
+curl -X GET "http://localhost:8080/api/albums?active=true"
+```
+
+```bash Combined Filters
+curl -X GET "http://localhost:8080/api/albums?page=0&size=10&year=2022&active=true"
+```
+
+## Example Response
+
+```json 200 OK
+{
+  "success": true,
+  "message": "Álbumes recuperados exitosamente",
+  "data": {
+    "content": [
+      {
+        "id": 1,
+        "nombre": "Mundial Qatar 2022",
+        "year": 2022,
+        "descripcion": "Álbum oficial de la Copa Mundial de la FIFA Qatar 2022",
+        "createdAt": "2026-03-12T10:30:00",
+        "updatedAt": "2026-03-12T10:30:00"
+      },
+      {
+        "id": 2,
+        "nombre": "Champions League 2023",
+        "year": 2023,
+        "descripcion": "Álbum de la UEFA Champions League 2022-2023",
+        "createdAt": "2026-03-12T11:00:00",
+        "updatedAt": "2026-03-12T11:00:00"
+      }
+    ],
+    "page": 0,
+    "size": 10,
+    "totalElements": 2,
+    "totalPages": 1
+  },
+  "timestamp": "2026-03-12T12:00:00"
+}
+```

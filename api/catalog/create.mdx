@@ -1,0 +1,322 @@
+---
+title: 'Create Catalog'
+api: 'POST /api/albums/{albumId}/catalogo'
+description: 'Initialize a new sticker catalog for an album'
+icon: 'plus'
+---
+
+## Overview
+
+Creates a catalog of available stickers for a specific album. This endpoint defines the master list of all stickers that can be collected.
+
+<Warning>
+  **One-Time Operation**: You can only create a catalog ONCE per album. Attempting to create a second catalog will result in an error.
+</Warning>
+
+## Endpoint
+
+```
+POST /api/albums/{albumId}/catalogo
+```
+
+## Path Parameters
+
+<ParamField path="albumId" type="long" required>
+  The unique identifier of the album
+</ParamField>
+
+## Request Body
+
+The request body must be an **array** of catalog entries. Each entry represents one sticker.
+
+<ParamField body="[].nombre" type="string" required>
+  Name or identifier of the sticker (e.g., "ARG-1", "Lionel Messi")
+  
+  **Validation**: Must not be blank
+</ParamField>
+
+<ParamField body="[].imagen" type="string">
+  URL to the sticker image
+  
+  **Optional**: Can be null or empty
+</ParamField>
+
+<ParamField body="[].fechaLanzamiento" type="date" required>
+  Release date of the sticker in ISO 8601 format (YYYY-MM-DD)
+  
+  **Validation**: Must not be null
+</ParamField>
+
+<ParamField body="[].tipoLamina" type="string" required>
+  Type or category of the sticker
+  
+  **Examples**: "común", "especial", "dorada", "bronce"
+  
+  **Validation**: Must not be blank
+</ParamField>
+
+## Response
+
+<ResponseField name="success" type="boolean">
+  Indicates if the operation was successful
+</ResponseField>
+
+<ResponseField name="message" type="string">
+  Human-readable success message
+  
+  **Example**: "Catálogo creado exitosamente con 638 láminas"
+</ResponseField>
+
+<ResponseField name="data" type="array">
+  Array of created catalog entries
+  
+  <ResponseField name="data[].id" type="long">
+    Unique identifier of the catalog entry
+  </ResponseField>
+  
+  <ResponseField name="data[].nombre" type="string">
+    Name of the sticker
+  </ResponseField>
+  
+  <ResponseField name="data[].imagen" type="string">
+    Image URL (may be null)
+  </ResponseField>
+  
+  <ResponseField name="data[].fechaLanzamiento" type="date">
+    Release date in ISO 8601 format
+  </ResponseField>
+  
+  <ResponseField name="data[].tipoLamina" type="string">
+    Type of the sticker
+  </ResponseField>
+  
+  <ResponseField name="data[].createdAt" type="datetime">
+    Timestamp when the catalog entry was created
+  </ResponseField>
+  
+  <ResponseField name="data[].updatedAt" type="datetime">
+    Timestamp when the catalog entry was last updated
+  </ResponseField>
+  
+  <ResponseField name="data[].active" type="boolean">
+    Indicates if the catalog entry is active
+  </ResponseField>
+</ResponseField>
+
+<ResponseField name="timestamp" type="datetime">
+  Server timestamp of the response
+</ResponseField>
+
+## Code Examples
+
+<CodeGroup>
+
+```bash cURL
+curl -X POST https://api.example.com/api/albums/1/catalogo \
+  -H "Content-Type: application/json" \
+  -d '[
+    {
+      "nombre": "ARG-1",
+      "imagen": "https://example.com/stickers/arg1.jpg",
+      "fechaLanzamiento": "2022-11-20",
+      "tipoLamina": "común"
+    },
+    {
+      "nombre": "Lionel Messi",
+      "imagen": "https://example.com/stickers/messi.jpg",
+      "fechaLanzamiento": "2022-11-20",
+      "tipoLamina": "dorada"
+    },
+    {
+      "nombre": "ARG-2",
+      "fechaLanzamiento": "2022-11-20",
+      "tipoLamina": "común"
+    }
+  ]'
+```
+
+```javascript JavaScript
+const response = await fetch('https://api.example.com/api/albums/1/catalogo', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json'
+  },
+  body: JSON.stringify([
+    {
+      nombre: 'ARG-1',
+      imagen: 'https://example.com/stickers/arg1.jpg',
+      fechaLanzamiento: '2022-11-20',
+      tipoLamina: 'común'
+    },
+    {
+      nombre: 'Lionel Messi',
+      imagen: 'https://example.com/stickers/messi.jpg',
+      fechaLanzamiento: '2022-11-20',
+      tipoLamina: 'dorada'
+    },
+    {
+      nombre: 'ARG-2',
+      fechaLanzamiento: '2022-11-20',
+      tipoLamina: 'común'
+    }
+  ])
+});
+
+const data = await response.json();
+console.log(data);
+```
+
+```python Python
+import requests
+
+url = 'https://api.example.com/api/albums/1/catalogo'
+headers = {'Content-Type': 'application/json'}
+
+catalog = [
+    {
+        'nombre': 'ARG-1',
+        'imagen': 'https://example.com/stickers/arg1.jpg',
+        'fechaLanzamiento': '2022-11-20',
+        'tipoLamina': 'común'
+    },
+    {
+        'nombre': 'Lionel Messi',
+        'imagen': 'https://example.com/stickers/messi.jpg',
+        'fechaLanzamiento': '2022-11-20',
+        'tipoLamina': 'dorada'
+    },
+    {
+        'nombre': 'ARG-2',
+        'fechaLanzamiento': '2022-11-20',
+        'tipoLamina': 'común'
+    }
+]
+
+response = requests.post(url, headers=headers, json=catalog)
+print(response.json())
+```
+
+```java Java
+List<LaminaCatalogoRequestDTO> catalogo = List.of(
+    new LaminaCatalogoRequestDTO(
+        "ARG-1",
+        "https://example.com/stickers/arg1.jpg",
+        LocalDate.of(2022, 11, 20),
+        "común"
+    ),
+    new LaminaCatalogoRequestDTO(
+        "Lionel Messi",
+        "https://example.com/stickers/messi.jpg",
+        LocalDate.of(2022, 11, 20),
+        "dorada"
+    ),
+    new LaminaCatalogoRequestDTO(
+        "ARG-2",
+        null,
+        LocalDate.of(2022, 11, 20),
+        "común"
+    )
+);
+
+ResponseEntity<ApiResponseDTO<List<LaminaCatalogoResponseDTO>>> response = 
+    laminaController.crearCatalogo(1L, catalogo);
+```
+
+</CodeGroup>
+
+## Response Example
+
+```json
+{
+  "success": true,
+  "message": "Catálogo creado exitosamente con 3 láminas",
+  "data": [
+    {
+      "id": 1,
+      "nombre": "ARG-1",
+      "imagen": "https://example.com/stickers/arg1.jpg",
+      "fechaLanzamiento": "2022-11-20",
+      "tipoLamina": "común",
+      "createdAt": "2026-03-12T10:30:00",
+      "updatedAt": "2026-03-12T10:30:00",
+      "active": true
+    },
+    {
+      "id": 2,
+      "nombre": "Lionel Messi",
+      "imagen": "https://example.com/stickers/messi.jpg",
+      "fechaLanzamiento": "2022-11-20",
+      "tipoLamina": "dorada",
+      "createdAt": "2026-03-12T10:30:01",
+      "updatedAt": "2026-03-12T10:30:01",
+      "active": true
+    },
+    {
+      "id": 3,
+      "nombre": "ARG-2",
+      "imagen": null,
+      "fechaLanzamiento": "2022-11-20",
+      "tipoLamina": "común",
+      "createdAt": "2026-03-12T10:30:02",
+      "updatedAt": "2026-03-12T10:30:02",
+      "active": true
+    }
+  ],
+  "timestamp": "2026-03-12T10:30:02"
+}
+```
+
+## Error Responses
+
+### Album Not Found (404)
+
+```json
+{
+  "success": false,
+  "message": "Álbum no encontrado con ID: 999",
+  "errorCode": "RESOURCE_NOT_FOUND",
+  "timestamp": "2026-03-12T10:30:00"
+}
+```
+
+### Catalog Already Exists (400)
+
+```json
+{
+  "success": false,
+  "message": "Este álbum ya tiene un catálogo de láminas definido",
+  "errorCode": "CATALOG_ALREADY_EXISTS",
+  "timestamp": "2026-03-12T10:30:00"
+}
+```
+
+### Validation Error (400)
+
+```json
+{
+  "success": false,
+  "message": "Error de validación",
+  "errorCode": "VALIDATION_ERROR",
+  "errors": {
+    "[0].nombre": "El nombre es obligatorio",
+    "[1].fechaLanzamiento": "La fecha de lanzamiento es obligatoria"
+  },
+  "timestamp": "2026-03-12T10:30:00"
+}
+```
+
+## Implementation Details
+
+The catalog creation logic is implemented in `LaminaService.java:42-60`:
+
+1. **Validates album exists**: Throws `ResourceNotFoundException` if album not found
+2. **Checks for existing catalog**: Counts active catalog entries for the album
+3. **Enforces one-catalog rule**: Throws `RuntimeException` if catalog already exists
+4. **Creates catalog entries**: Maps each DTO to a `LaminaCatalogo` entity and saves to database
+5. **Returns response**: Maps saved entities back to response DTOs
+
+## Related Endpoints
+
+- [Get Catalog](/api/catalog/get) - Retrieve the catalog
+- [Get Status](/api/catalog/status) - View collection statistics
+- [Add Sticker](/api/laminas/create) - Add stickers from the catalog

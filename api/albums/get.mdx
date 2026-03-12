@@ -1,0 +1,91 @@
+---
+title: 'Get Album'
+api: 'GET /api/albums/{id}'
+description: 'Retrieve a specific album by ID'
+---
+
+## Path Parameters
+
+<ParamField path="id" type="long" required>
+  The unique identifier of the album to retrieve
+</ParamField>
+
+## Response
+
+<ResponseField name="success" type="boolean">
+  Indicates if the request was successful
+</ResponseField>
+
+<ResponseField name="message" type="string">
+  Response message: "Álbum recuperado exitosamente"
+</ResponseField>
+
+<ResponseField name="data" type="object">
+  The album object
+  
+  <ResponseField name="data.id" type="long">
+    Unique identifier for the album
+  </ResponseField>
+  
+  <ResponseField name="data.nombre" type="string">
+    Album name
+  </ResponseField>
+  
+  <ResponseField name="data.year" type="integer">
+    Release year
+  </ResponseField>
+  
+  <ResponseField name="data.descripcion" type="string">
+    Album description
+  </ResponseField>
+  
+  <ResponseField name="data.createdAt" type="string">
+    ISO 8601 timestamp of creation
+  </ResponseField>
+  
+  <ResponseField name="data.updatedAt" type="string">
+    ISO 8601 timestamp of last update
+  </ResponseField>
+</ResponseField>
+
+<ResponseField name="timestamp" type="string">
+  ISO 8601 timestamp of the response
+</ResponseField>
+
+## Example Request
+
+```bash cURL
+curl -X GET http://localhost:8080/api/albums/1
+```
+
+## Example Responses
+
+```json 200 OK
+{
+  "success": true,
+  "message": "Álbum recuperado exitosamente",
+  "data": {
+    "id": 1,
+    "nombre": "Mundial Qatar 2022",
+    "year": 2022,
+    "descripcion": "Álbum oficial de la Copa Mundial de la FIFA Qatar 2022",
+    "createdAt": "2026-03-12T10:30:00",
+    "updatedAt": "2026-03-12T10:30:00"
+  },
+  "timestamp": "2026-03-12T12:00:00"
+}
+```
+
+```json 404 Not Found
+{
+  "success": false,
+  "message": "Album not found with ID: 999",
+  "errorCode": "ALBUM_NOT_FOUND",
+  "timestamp": "2026-03-12T12:00:00"
+}
+```
+
+## Related Endpoints
+
+- [Get Catalog Status](/api/catalog/status) - Get summary statistics for an album
+- [List Albums](/api/albums/list) - List all albums with filtering

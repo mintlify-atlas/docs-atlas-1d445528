@@ -1,0 +1,69 @@
+---
+title: 'Albums API Overview'
+description: 'Manage albums and their winners'
+---
+
+## Introduction
+
+The Albums API allows you to manage album records including creating, retrieving, updating, and deleting albums. All endpoints are prefixed with `/api/albums`.
+
+## Base URL
+
+```
+/api/albums
+```
+
+## Response Format
+
+All responses are wrapped in a standard `ApiResponseDTO` structure:
+
+```json
+{
+  "success": true,
+  "message": "Operation completed successfully",
+  "data": { /* endpoint-specific data */ },
+  "timestamp": "2026-03-12T10:30:00"
+}
+```
+
+### Error Response Format
+
+```json
+{
+  "success": false,
+  "message": "Error description",
+  "errorCode": "ERROR_CODE",
+  "errors": { /* field-specific errors */ },
+  "timestamp": "2026-03-12T10:30:00"
+}
+```
+
+## Available Endpoints
+
+<CardGroup cols={2}>
+  <Card title="Create Album" icon="plus" href="/api/albums/create">
+    Create a new album
+  </Card>
+  <Card title="List Albums" icon="list" href="/api/albums/list">
+    Get paginated list of albums
+  </Card>
+  <Card title="Get Album" icon="book" href="/api/albums/get">
+    Retrieve a specific album by ID
+  </Card>
+  <Card title="Update Album" icon="pen" href="/api/albums/update">
+    Update an existing album
+  </Card>
+  <Card title="Delete Album" icon="trash" href="/api/albums/delete">
+    Soft delete an album
+  </Card>
+</CardGroup>
+
+## Common Status Codes
+
+| Code | Description |
+|------|-------------|
+| 200  | Success |
+| 201  | Created successfully |
+| 400  | Bad request - validation error |
+| 404  | Album not found |
+| 500  | Internal server error |

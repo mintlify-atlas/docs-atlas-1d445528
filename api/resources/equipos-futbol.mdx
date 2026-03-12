@@ -1,0 +1,73 @@
+---
+title: "Equipos Fútbol España"
+description: "Manage Spanish football teams data"
+---
+
+## List Active Teams
+
+<RequestExample>
+```bash cURL
+curl -X GET http://localhost:8080/api/equipos-futbol-espana \
+  -H "Content-Type: application/json"
+```
+</RequestExample>
+
+<ResponseExample>
+```json 200
+{
+  "status": "success",
+  "message": "Equipos activos recuperados exitosamente",
+  "data": [
+    {
+      "id": 1,
+      "nombre": "Real Madrid",
+      "ciudad": "Madrid",
+      "fundacion": 1902,
+      "estadio": "Santiago Bernabéu",
+      "activo": true
+    },
+    {
+      "id": 2,
+      "nombre": "FC Barcelona",
+      "ciudad": "Barcelona",
+      "fundacion": 1899,
+      "estadio": "Camp Nou",
+      "activo": true
+    }
+  ],
+  "timestamp": "2026-03-12T10:30:00"
+}
+```
+</ResponseExample>
+
+### Response Fields
+
+<ResponseField name="data" type="array">
+  Array of active team objects
+  
+  <Expandable title="team object">
+    <ResponseField name="id" type="long">
+      Unique identifier for the team
+    </ResponseField>
+    
+    <ResponseField name="nombre" type="string">
+      Team name (max 100 characters)
+    </ResponseField>
+    
+    <ResponseField name="ciudad" type="string">
+      City where the team is based (max 100 characters)
+    </ResponseField>
+    
+    <ResponseField name="fundacion" type="integer">
+      Year the team was founded
+    </ResponseField>
+    
+    <ResponseField name="estadio" type="string">
+      Stadium name (max 100 characters)
+    </ResponseField>
+    
+    <ResponseField name="activo" type="boolean">
+      Whether the team is currently active
+    </ResponseField>
+  </Expandable>
+</ResponseField>

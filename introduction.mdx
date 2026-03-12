@@ -1,0 +1,144 @@
+---
+title: "Introduction"
+description: "REST API for managing collectible albums and stickers with catalog validation"
+---
+
+## Welcome to Album Collection Manager API
+
+The Album Collection Manager API is a comprehensive Spring Boot REST service designed for managing collectible albums and their stickers (laminas). Built with modern Java 21 and Spring Boot 3.5, it provides robust features for collectors to track their collections with intelligent validation and duplicate detection.
+
+<CardGroup cols={2}>
+  <Card
+    title="Quick Start"
+    icon="rocket"
+    href="/quickstart"
+  >
+    Get up and running in 5 minutes with our quickstart guide
+  </Card>
+  <Card
+    title="API Reference"
+    icon="book-open"
+    href="/api/albums/overview"
+  >
+    Explore comprehensive API documentation
+  </Card>
+  <Card
+    title="Core Concepts"
+    icon="lightbulb"
+    href="/concepts/architecture"
+  >
+    Understand the architecture and design patterns
+  </Card>
+  <Card
+    title="Database Setup"
+    icon="database"
+    href="/guides/database-setup"
+  >
+    Configure H2 or MySQL for your environment
+  </Card>
+</CardGroup>
+
+## Key Features
+
+<AccordionGroup>
+  <Accordion title="Album & Sticker Management" icon="images">
+    Complete CRUD operations for managing albums and their associated stickers with full validation and relationship management.
+  </Accordion>
+
+  <Accordion title="Catalog-Based Validation" icon="shield-check">
+    Enforce data integrity by validating all stickers against a predefined catalog before adding them to your collection.
+  </Accordion>
+
+  <Accordion title="Duplicate Detection" icon="copy">
+    Automatically detect and track duplicate stickers, helping collectors identify trading opportunities.
+  </Accordion>
+
+  <Accordion title="Soft Delete Pattern" icon="trash-can">
+    Never lose data with soft delete implementation across all entities, maintaining historical records.
+  </Accordion>
+
+  <Accordion title="Bulk Operations" icon="layer-group">
+    Upload multiple stickers at once with intelligent validation and detailed response for each item.
+  </Accordion>
+
+  <Accordion title="OpenAPI Documentation" icon="file-code">
+    Interactive API documentation via Swagger UI for easy exploration and testing.
+  </Accordion>
+</AccordionGroup>
+
+## Technology Stack
+
+<CardGroup cols={3}>
+  <Card title="Java 21" icon="java">
+    Modern Java with preview features enabled
+  </Card>
+  <Card title="Spring Boot 3.5" icon="leaf">
+    Latest Spring framework with auto-configuration
+  </Card>
+  <Card title="JPA/Hibernate" icon="database">
+    Powerful ORM with auditing support
+  </Card>
+  <Card title="H2/MySQL" icon="server">
+    Flexible database support for dev and production
+  </Card>
+  <Card title="Lombok" icon="wrench">
+    Reduce boilerplate with annotations
+  </Card>
+  <Card title="Maven" icon="box">
+    Dependency management and build automation
+  </Card>
+</CardGroup>
+
+## API Highlights
+
+The API provides comprehensive endpoints organized into logical groups:
+
+- **Albums**: Create, read, update, and soft delete album collections
+- **Catalog**: Define the master list of available stickers for each album
+- **Laminas**: Manage individual stickers with duplicate detection and bulk upload
+- **Additional Resources**: Access supplementary data like Chilean cities, exoplanets, and more
+
+<Note>
+All API responses follow a consistent `ApiResponseDTO` wrapper pattern with success indicators, messages, and error details for predictable client integration.
+</Note>
+
+## Architecture Patterns
+
+This API follows industry best practices:
+
+- **Layered MVC Architecture**: Clean separation between controllers, services, and repositories
+- **DTOs & Mappers**: Request/response transformation for API contract stability
+- **JPA Auditing**: Automatic tracking of creation and modification timestamps
+- **Global Exception Handling**: Centralized error handling with meaningful error codes
+- **Validation Framework**: Jakarta Bean Validation for request validation
+
+<Card
+  title="Learn More About Architecture"
+  icon="sitemap"
+  href="/concepts/architecture"
+>
+  Dive deep into the system design and patterns
+</Card>
+
+## Ready to Get Started?
+
+<Steps>
+  <Step title="Install Prerequisites">
+    Ensure you have Java 21+ and Maven installed on your system
+  </Step>
+  <Step title="Follow the Quickstart">
+    Clone the repository and run the application in minutes
+  </Step>
+  <Step title="Explore the API">
+    Use Swagger UI at `http://localhost:8080/swagger-ui.html` to test endpoints
+  </Step>
+</Steps>
+
+<Card
+  title="View Quickstart Guide"
+  icon="play"
+  href="/quickstart"
+  horizontal
+>
+  Start building with the Album Collection Manager API now
+</Card>

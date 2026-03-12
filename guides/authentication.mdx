@@ -1,0 +1,161 @@
+---
+title: 'Authentication'
+description: 'Learn how to authenticate API requests in the Album Collection Manager'
+icon: 'key'
+---
+
+## Overview
+
+The Album Collection Manager API is currently designed as a public API without authentication requirements. All endpoints are accessible without API keys, tokens, or authentication headers.
+
+<Note>
+  This API does not currently implement authentication mechanisms. All endpoints are publicly accessible.
+</Note>
+
+## Making Requests
+
+You can make requests directly to any endpoint without providing authentication credentials:
+
+<CodeGroup>
+
+```bash cURL
+curl -X GET "http://localhost:8080/api/albums" \
+  -H "Content-Type: application/json"
+```
+
+```javascript JavaScript
+fetch('http://localhost:8080/api/albums', {
+  method: 'GET',
+  headers: {
+    'Content-Type': 'application/json'
+  }
+})
+  .then(response => response.json())
+  .then(data => console.log(data));
+```
+
+```python Python
+import requests
+
+response = requests.get(
+    'http://localhost:8080/api/albums',
+    headers={'Content-Type': 'application/json'}
+)
+
+print(response.json())
+```
+
+```java Java
+HttpClient client = HttpClient.newHttpClient();
+HttpRequest request = HttpRequest.newBuilder()
+    .uri(URI.create("http://localhost:8080/api/albums"))
+    .header("Content-Type", "application/json")
+    .GET()
+    .build();
+
+HttpResponse<String> response = client.send(request, 
+    HttpResponse.BodyHandlers.ofString());
+```
+
+</CodeGroup>
+
+## Future Authentication
+
+If you plan to add authentication to this API, consider implementing:
+
+<Steps>
+  <Step title="Choose Authentication Method">
+    Select an appropriate authentication mechanism:
+    - **JWT (JSON Web Tokens)**: Stateless, scalable authentication
+    - **OAuth 2.0**: Industry standard for authorization
+    - **API Keys**: Simple key-based authentication
+    - **Basic Auth**: Username/password (not recommended for production)
+  </Step>
+
+  <Step title="Add Spring Security Dependency">
+    Add Spring Security to your `pom.xml`:
+    ```xml
+    <dependency>
+      <groupId>org.springframework.boot</groupId>
+      <artifactId>spring-boot-starter-security</artifactId>
+    </dependency>
+    ```
+  </Step>
+
+  <Step title="Configure Security">
+    Create a security configuration class to define authentication rules:
+    ```java
+    @Configuration
+    @EnableWebSecurity
+    public class SecurityConfig {
+      @Bean
+      public SecurityFilterChain filterChain(HttpSecurity http) {
+        // Configure your security rules
+      }
+    }
+    ```
+  </Step>
+
+  <Step title="Protect Endpoints">
+    Use annotations to secure specific endpoints:
+    ```java
+    @PreAuthorize("hasRole('ADMIN')")
+    @DeleteMapping("/{id}")
+    public ResponseEntity<?> deleteAlbum(@PathVariable Long id) {
+      // Only admins can delete
+    }
+    ```
+  </Step>
+</Steps>
+
+<Warning>
+  Without authentication, your API is vulnerable to unauthorized access. Implement proper authentication before deploying to production.
+</Warning>
+
+## Security Considerations
+
+### CORS Configuration
+
+The API includes CORS configuration in `WebConfig.java`. Review and adjust allowed origins for production:
+
+```java
+@Configuration
+public class WebConfig implements WebMvcConfigurer {
+    @Override
+    public void addCorsMappings(CorsRegistry registry) {
+        registry.addMapping("/api/**")
+                .allowedOrigins("*")  // ⚠️ Update for production
+                .allowedMethods("GET", "POST", "PUT", "DELETE", "PATCH");
+    }
+}
+```
+
+### HTTPS/TLS
+
+Always use HTTPS in production to encrypt data in transit. Configure SSL/TLS certificates in `application.properties`:
+
+```properties
+server.ssl.key-store=classpath:keystore.p12
+server.ssl.key-store-password=your-password
+server.ssl.key-store-type=PKCS12
+server.ssl.key-alias=tomcat
+```
+
+### Rate Limiting
+
+Consider implementing rate limiting to prevent abuse:
+
+- Use Spring Cloud Gateway rate limiter
+- Implement custom rate limiting with Redis
+- Use API gateway solutions (AWS API Gateway, Kong, etc.)
+
+## Related Resources
+
+<CardGroup cols={2}>
+  <Card title="Error Handling" icon="exclamation-triangle" href="/guides/error-handling">
+    Learn how the API handles errors and authentication failures
+  </Card>
+  <Card title="API Reference" icon="book" href="/api/albums/overview">
+    Explore all available endpoints
+  </Card>
+</CardGroup>

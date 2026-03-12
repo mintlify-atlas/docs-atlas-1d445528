@@ -1,0 +1,424 @@
+---
+title: 'Database Setup'
+description: 'Configure H2 (development) and MySQL (production) databases for the Album Collection Manager'
+icon: 'database'
+---
+
+## Overview
+
+The Album Collection Manager supports two database configurations:
+
+- **H2 In-Memory Database**: For local development and testing
+- **MySQL**: For production deployments
+
+Configuration is managed through `application.properties` with environment-specific settings.
+
+## Development Setup (H2)
+
+H2 is an embedded, in-memory database perfect for local development. It's pre-configured and requires no installation.
+
+### Configuration
+
+The default configuration in `application.properties` uses H2:
+
+```properties
+# H2 In-Memory Database (Active by default)
+spring.datasource.url=jdbc:h2:mem:web2examen;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+spring.datasource.driver-class-name=org.h2.Driver
+spring.datasource.username=sa
+spring.datasource.password=
+
+# H2 Console - accessible at http://localhost:8080/h2-console
+spring.h2.console.enabled=true
+spring.h2.console.path=/h2-console
+spring.h2.console.settings.trace=false
+spring.h2.console.settings.web-allow-others=false
+
+# JPA/Hibernate Configuration
+spring.jpa.hibernate.ddl-auto=create-drop
+spring.jpa.show-sql=false
+spring.jpa.properties.hibernate.format_sql=true
+spring.jpa.properties.hibernate.globally_quoted_identifiers=true
+```
+
+### Key Settings Explained
+
+| Setting | Value | Purpose |
+|---------|-------|--------|
+| `DB_CLOSE_DELAY=-1` | Keep DB alive | Database persists while application runs |
+| `DB_CLOSE_ON_EXIT=FALSE` | Don't auto-close | Prevents premature database shutdown |
+| `hibernate.ddl-auto=create-drop` | Recreate schema | Drops and recreates tables on each restart |
+| `globally_quoted_identifiers=true` | Quote identifiers | Prevents conflicts with SQL reserved words |
+
+### Accessing H2 Console
+
+<Steps>
+  <Step title="Start the Application">
+    Run your Spring Boot application:
+    ```bash
+    mvn spring-boot:run
+    ```
+  </Step>
+
+  <Step title="Open H2 Console">
+    Navigate to the H2 console in your browser:
+    ```
+    http://localhost:8080/h2-console
+    ```
+  </Step>
+
+  <Step title="Configure Connection">
+    Use these connection details:
+    - **JDBC URL**: `jdbc:h2:mem:web2examen`
+    - **User Name**: `sa`
+    - **Password**: *(leave empty)*
+    - **Driver Class**: `org.h2.Driver`
+  </Step>
+
+  <Step title="Connect and Query">
+    Click "Connect" to access the database console and run SQL queries.
+  </Step>
+</Steps>
+
+<Note>
+  The H2 console is only enabled in development. Disable it in production for security.
+</Note>
+
+### Sample Queries
+
+Once connected to H2 console, you can run queries:
+
+```sql
+-- View all albums
+SELECT * FROM album;
+
+-- View all laminas
+SELECT * FROM lamina;
+
+-- Check database schema
+SHOW TABLES;
+
+-- View table structure
+SHOW COLUMNS FROM album;
+```
+
+## Production Setup (MySQL)
+
+For production deployments, switch to MySQL for better performance, scalability, and data persistence.
+
+### Prerequisites
+
+<Steps>
+  <Step title="Install MySQL">
+    Install MySQL Server 8.0 or higher:
+    ```bash
+    # Ubuntu/Debian
+    sudo apt update
+    sudo apt install mysql-server
+    
+    # macOS (using Homebrew)
+    brew install mysql
+    
+    # Windows: Download from mysql.com
+    ```
+  </Step>
+
+  <Step title="Create Database">
+    Log into MySQL and create the application database:
+    ```sql
+    mysql -u root -p
+    
+    CREATE DATABASE album_collection_manager;
+    CREATE USER 'app_user'@'localhost' IDENTIFIED BY 'your_secure_password';
+    GRANT ALL PRIVILEGES ON album_collection_manager.* TO 'app_user'@'localhost';
+    FLUSH PRIVILEGES;
+    ```
+  </Step>
+
+  <Step title="Verify Connection">
+    Test the connection:
+    ```bash
+    mysql -u app_user -p album_collection_manager
+    ```
+  </Step>
+</Steps>
+
+### Configuration
+
+Update `application.properties` to use MySQL:
+
+<CodeGroup>
+
+```properties Local MySQL
+# Comment out H2 configuration
+# spring.datasource.url=jdbc:h2:mem:web2examen...
+# spring.h2.console.enabled=true
+
+# Enable MySQL configuration
+spring.datasource.url=jdbc:mysql://localhost:3306/album_collection_manager
+spring.datasource.username=app_user
+spring.datasource.password=your_secure_password
+spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver
+
+# MySQL Hibernate settings
+spring.jpa.hibernate.ddl-auto=validate
+spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.MySQL8Dialect
+spring.jpa.database-platform=org.hibernate.dialect.MySQL8Dialect
+spring.jpa.show-sql=false
+```
+
+```properties AWS RDS MySQL
+# Production MySQL on AWS RDS
+spring.datasource.url=jdbc:mysql://db-ipss.cb2es8a2cxpo.us-east-2.rds.amazonaws.com:3306/web2_examen
+spring.datasource.username=admin
+spring.datasource.password=${DB_PASSWORD}  # Use environment variable
+spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver
+
+# Production Hibernate settings
+spring.jpa.hibernate.ddl-auto=validate
+spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.MySQL8Dialect
+spring.jpa.database-platform=org.hibernate.dialect.MySQL8Dialect
+spring.jpa.show-sql=false
+```
+
+</CodeGroup>
+
+### DDL Auto Settings
+
+<Warning>
+  Choose the correct `hibernate.ddl-auto` setting based on your environment.
+</Warning>
+
+| Setting | Behavior | Use Case |
+|---------|----------|----------|
+| `create-drop` | Drop and recreate schema on startup/shutdown | **Development only** - destroys data |
+| `create` | Create schema on startup, don't drop on shutdown | Initial development |
+| `update` | Update schema without data loss | Development/staging |
+| `validate` | Validate schema, no changes | **Production** - safest option |
+| `none` | No schema management | Manual migration tools |
+
+<Note>
+  In production, use `validate` and manage schema changes with migration tools like Flyway or Liquibase.
+</Note>
+
+## Environment-Based Configuration
+
+Use Spring profiles to manage multiple environments:
+
+### Create Profile-Specific Files
+
+```bash
+src/main/resources/
+├── application.properties          # Common settings
+├── application-dev.properties      # Development (H2)
+└── application-prod.properties     # Production (MySQL)
+```
+
+### application-dev.properties
+
+```properties
+# H2 Development Database
+spring.datasource.url=jdbc:h2:mem:web2examen;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+spring.datasource.driver-class-name=org.h2.Driver
+spring.datasource.username=sa
+spring.datasource.password=
+spring.h2.console.enabled=true
+spring.jpa.hibernate.ddl-auto=create-drop
+spring.jpa.show-sql=true
+```
+
+### application-prod.properties
+
+```properties
+# MySQL Production Database
+spring.datasource.url=jdbc:mysql://${DB_HOST}:3306/${DB_NAME}
+spring.datasource.username=${DB_USER}
+spring.datasource.password=${DB_PASSWORD}
+spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver
+spring.jpa.hibernate.ddl-auto=validate
+spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.MySQL8Dialect
+spring.jpa.show-sql=false
+```
+
+### Activate Profiles
+
+<CodeGroup>
+
+```bash Command Line
+# Development
+java -jar app.jar --spring.profiles.active=dev
+
+# Production
+java -jar app.jar --spring.profiles.active=prod
+```
+
+```bash Environment Variable
+export SPRING_PROFILES_ACTIVE=prod
+java -jar app.jar
+```
+
+```properties application.properties
+# Set default profile
+spring.profiles.active=dev
+```
+
+</CodeGroup>
+
+## Database Migration
+
+For production, use database migration tools instead of Hibernate auto-ddl:
+
+### Using Flyway
+
+<Steps>
+  <Step title="Add Flyway Dependency">
+    Add to `pom.xml`:
+    ```xml
+    <dependency>
+      <groupId>org.flywaydb</groupId>
+      <artifactId>flyway-core</artifactId>
+    </dependency>
+    <dependency>
+      <groupId>org.flywaydb</groupId>
+      <artifactId>flyway-mysql</artifactId>
+    </dependency>
+    ```
+  </Step>
+
+  <Step title="Create Migration Scripts">
+    Create migration files in `src/main/resources/db/migration/`:
+    ```
+    V1__create_album_table.sql
+    V2__create_lamina_table.sql
+    V3__add_indexes.sql
+    ```
+  </Step>
+
+  <Step title="Write Migration SQL">
+    Example migration (`V1__create_album_table.sql`):
+    ```sql
+    CREATE TABLE album (
+      id BIGINT AUTO_INCREMENT PRIMARY KEY,
+      nombre VARCHAR(255) NOT NULL,
+      year INT NOT NULL,
+      active BOOLEAN DEFAULT true,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    );
+    ```
+  </Step>
+
+  <Step title="Configure Flyway">
+    Add to `application.properties`:
+    ```properties
+    spring.flyway.enabled=true
+    spring.flyway.baseline-on-migrate=true
+    spring.jpa.hibernate.ddl-auto=validate
+    ```
+  </Step>
+</Steps>
+
+## Connection Pooling
+
+Spring Boot uses HikariCP by default for connection pooling. Optimize for production:
+
+```properties
+# HikariCP Configuration
+spring.datasource.hikari.maximum-pool-size=10
+spring.datasource.hikari.minimum-idle=5
+spring.datasource.hikari.connection-timeout=20000
+spring.datasource.hikari.idle-timeout=300000
+spring.datasource.hikari.max-lifetime=1200000
+```
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Connection Refused" icon="plug">
+    **Error**: `java.sql.SQLException: Connection refused`
+    
+    **Solutions**:
+    - Verify MySQL is running: `sudo systemctl status mysql`
+    - Check host and port in connection URL
+    - Verify firewall allows port 3306
+    - Test connection: `mysql -h localhost -u app_user -p`
+  </Accordion>
+
+  <Accordion title="Access Denied" icon="lock">
+    **Error**: `Access denied for user 'app_user'@'localhost'`
+    
+    **Solutions**:
+    - Verify username and password
+    - Check user privileges: `SHOW GRANTS FOR 'app_user'@'localhost';`
+    - Recreate user with proper grants
+  </Accordion>
+
+  <Accordion title="Schema Validation Failed" icon="circle-xmark">
+    **Error**: `Schema-validation: missing table`
+    
+    **Solutions**:
+    - Use `ddl-auto=update` temporarily to create schema
+    - Run migration scripts manually
+    - Use Flyway/Liquibase for proper migrations
+    - Verify database name is correct
+  </Accordion>
+
+  <Accordion title="H2 Console Not Loading" icon="browser">
+    **Error**: 404 on `/h2-console`
+    
+    **Solutions**:
+    - Verify `spring.h2.console.enabled=true`
+    - Check context path: `server.servlet.context-path=/`
+    - Ensure H2 dependency is in classpath
+    - Disable in production (security risk)
+  </Accordion>
+</AccordionGroup>
+
+## Security Best Practices
+
+<Warning>
+  Never commit database credentials to version control. Use environment variables or secret management.
+</Warning>
+
+<Steps>
+  <Step title="Use Environment Variables">
+    Reference credentials from environment:
+    ```properties
+    spring.datasource.url=jdbc:mysql://${DB_HOST}:3306/${DB_NAME}
+    spring.datasource.username=${DB_USER}
+    spring.datasource.password=${DB_PASSWORD}
+    ```
+  </Step>
+
+  <Step title="Restrict Database Users">
+    Create application-specific users with limited privileges:
+    ```sql
+    GRANT SELECT, INSERT, UPDATE, DELETE ON album_collection_manager.* 
+      TO 'app_user'@'localhost';
+    ```
+  </Step>
+
+  <Step title="Enable SSL/TLS">
+    For production, encrypt database connections:
+    ```properties
+    spring.datasource.url=jdbc:mysql://host:3306/db?useSSL=true&requireSSL=true
+    ```
+  </Step>
+
+  <Step title="Disable H2 Console in Production">
+    ```properties
+    spring.h2.console.enabled=false
+    ```
+  </Step>
+</Steps>
+
+## Related Resources
+
+<CardGroup cols={2}>
+  <Card title="Docker Deployment" icon="docker" href="/guides/docker-deployment">
+    Learn how to containerize the application with database
+  </Card>
+  <Card title="Error Handling" icon="triangle-exclamation" href="/guides/error-handling">
+    Understand database-related errors
+  </Card>
+</CardGroup>

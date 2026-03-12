@@ -1,0 +1,317 @@
+---
+title: 'List Stickers'
+api: 'GET /api/laminas'
+description: 'Retrieve all active stickers or filter by album'
+---
+
+## Overview
+
+The list endpoint allows you to retrieve stickers from your collection. You can either get all stickers across all albums or filter by a specific album.
+
+## Endpoints
+
+### Get All Stickers
+
+```
+GET /api/laminas
+```
+
+Returns all active stickers in the system, regardless of album.
+
+### Get Stickers by Album
+
+```
+GET /api/laminas/album/{albumId}
+```
+
+Returns all active stickers for a specific album.
+
+## Path Parameters
+
+<ParamField path="albumId" type="number" required>
+  The ID of the album to filter by (only for `/api/laminas/album/{albumId}`)
+</ParamField>
+
+## Response
+
+<ResponseField name="success" type="boolean">
+  Indicates if the operation was successful (always `true` for successful requests)
+</ResponseField>
+
+<ResponseField name="message" type="string">
+  Success message with total count
+  
+  Examples:
+  - `"Láminas obtenidas correctamente. Total: 25"`
+  - `"Láminas del álbum obtenidas correctamente. Total: 10"`
+</ResponseField>
+
+<ResponseField name="data" type="array">
+  Array of sticker objects
+  
+  <ResponseField name="data[].id" type="number">
+    Unique identifier for the sticker
+  </ResponseField>
+  
+  <ResponseField name="data[].nombre" type="string">
+    Sticker name
+  </ResponseField>
+  
+  <ResponseField name="data[].imagen" type="string">
+    URL or path to the sticker image
+  </ResponseField>
+  
+  <ResponseField name="data[].fechaLanzamiento" type="string">
+    Release date in ISO 8601 format (YYYY-MM-DD)
+  </ResponseField>
+  
+  <ResponseField name="data[].tipoLamina" type="string">
+    Type/category of the sticker
+  </ResponseField>
+  
+  <ResponseField name="data[].createdAt" type="string">
+    Timestamp when the sticker was created
+  </ResponseField>
+  
+  <ResponseField name="data[].updatedAt" type="string">
+    Timestamp when the sticker was last updated
+  </ResponseField>
+  
+  <ResponseField name="data[].active" type="boolean">
+    Whether the sticker is active (always `true` in list responses)
+  </ResponseField>
+  
+  <ResponseField name="data[].album" type="object">
+    Basic information about the associated album
+    
+    <ResponseField name="data[].album.id" type="number">
+      Album ID
+    </ResponseField>
+    
+    <ResponseField name="data[].album.nombre" type="string">
+      Album name
+    </ResponseField>
+    
+    <ResponseField name="data[].album.year" type="number">
+      Album year
+    </ResponseField>
+  </ResponseField>
+</ResponseField>
+
+<ResponseField name="timestamp" type="string">
+  ISO 8601 timestamp of the response
+</ResponseField>
+
+## Examples
+
+### Get All Stickers
+
+<CodeGroup>
+```bash cURL
+curl -X GET https://api.example.com/api/laminas
+```
+
+```json Response
+{
+  "success": true,
+  "message": "Láminas obtenidas correctamente. Total: 3",
+  "data": [
+    {
+      "id": 101,
+      "nombre": "Lionel Messi",
+      "imagen": "https://example.com/messi.jpg",
+      "fechaLanzamiento": "2024-01-15",
+      "tipoLamina": "especial",
+      "createdAt": "2026-03-12T10:30:00",
+      "updatedAt": "2026-03-12T10:30:00",
+      "active": true,
+      "album": {
+        "id": 1,
+        "nombre": "FIFA World Cup Qatar 2022",
+        "year": 2022
+      }
+    },
+    {
+      "id": 102,
+      "nombre": "Cristiano Ronaldo",
+      "imagen": "https://example.com/ronaldo.jpg",
+      "fechaLanzamiento": "2024-01-15",
+      "tipoLamina": "especial",
+      "createdAt": "2026-03-12T10:31:00",
+      "updatedAt": "2026-03-12T10:31:00",
+      "active": true,
+      "album": {
+        "id": 1,
+        "nombre": "FIFA World Cup Qatar 2022",
+        "year": 2022
+      }
+    },
+    {
+      "id": 103,
+      "nombre": "Kylian Mbappé",
+      "imagen": "https://example.com/mbappe.jpg",
+      "fechaLanzamiento": "2024-02-01",
+      "tipoLamina": "normal",
+      "createdAt": "2026-03-12T10:32:00",
+      "updatedAt": "2026-03-12T10:32:00",
+      "active": true,
+      "album": {
+        "id": 2,
+        "nombre": "UEFA Champions League 2023-24",
+        "year": 2023
+      }
+    }
+  ],
+  "timestamp": "2026-03-12T10:35:00"
+}
+```
+</CodeGroup>
+
+### Get Stickers by Album
+
+<CodeGroup>
+```bash cURL
+curl -X GET https://api.example.com/api/laminas/album/1
+```
+
+```json Response
+{
+  "success": true,
+  "message": "Láminas del álbum obtenidas correctamente. Total: 2",
+  "data": [
+    {
+      "id": 101,
+      "nombre": "Lionel Messi",
+      "imagen": "https://example.com/messi.jpg",
+      "fechaLanzamiento": "2024-01-15",
+      "tipoLamina": "especial",
+      "createdAt": "2026-03-12T10:30:00",
+      "updatedAt": "2026-03-12T10:30:00",
+      "active": true,
+      "album": {
+        "id": 1,
+        "nombre": "FIFA World Cup Qatar 2022",
+        "year": 2022
+      }
+    },
+    {
+      "id": 102,
+      "nombre": "Cristiano Ronaldo",
+      "imagen": "https://example.com/ronaldo.jpg",
+      "fechaLanzamiento": "2024-01-15",
+      "tipoLamina": "especial",
+      "createdAt": "2026-03-12T10:31:00",
+      "updatedAt": "2026-03-12T10:31:00",
+      "active": true,
+      "album": {
+        "id": 1,
+        "nombre": "FIFA World Cup Qatar 2022",
+        "year": 2022
+      }
+    }
+  ],
+  "timestamp": "2026-03-12T10:35:00"
+}
+```
+</CodeGroup>
+
+### Empty Collection
+
+<CodeGroup>
+```bash cURL
+curl -X GET https://api.example.com/api/laminas/album/99
+```
+
+```json Response
+{
+  "success": true,
+  "message": "Láminas del álbum obtenidas correctamente. Total: 0",
+  "data": [],
+  "timestamp": "2026-03-12T10:35:00"
+}
+```
+</CodeGroup>
+
+## Error Responses
+
+### Album Not Found
+
+If you request stickers for an album that doesn't exist:
+
+```json
+{
+  "success": false,
+  "message": "Álbum with ID 999 not found",
+  "timestamp": "2026-03-12T10:35:00"
+}
+```
+
+## Filtering and Sorting
+
+<Note>
+  Currently, the API returns all active stickers without additional filtering or sorting options. Stickers marked as inactive (deleted) are automatically excluded.
+</Note>
+
+### Active vs Inactive Stickers
+
+- Only stickers with `active = true` are returned
+- Deleted stickers (soft-deleted via DELETE endpoint) have `active = false` and won't appear in results
+
+## Duplicate Handling in Lists
+
+<Note>
+  If you have multiple copies of the same sticker (duplicates), they will all appear in the list as separate entries with different IDs.
+</Note>
+
+Example with duplicates:
+
+```json
+{
+  "success": true,
+  "message": "Láminas del álbum obtenidas correctamente. Total: 3",
+  "data": [
+    {
+      "id": 101,
+      "nombre": "Lionel Messi",
+      // ... other fields
+    },
+    {
+      "id": 104,
+      "nombre": "Lionel Messi",
+      // ... other fields (same sticker, different copy)
+    },
+    {
+      "id": 102,
+      "nombre": "Cristiano Ronaldo",
+      // ... other fields
+    }
+  ],
+  "timestamp": "2026-03-12T10:35:00"
+}
+```
+
+## Use Cases
+
+### View Your Collection
+
+Use `GET /api/laminas` to see all stickers you've collected across all albums.
+
+### Check Album Progress
+
+Use `GET /api/laminas/album/{albumId}` to see which stickers you have for a specific album. Compare with the catalog to identify missing stickers.
+
+### Identify Duplicates for Trading
+
+Fetch all stickers for an album and group by `nombre` to identify which stickers you have multiple copies of (good for trading).
+
+## Performance Considerations
+
+<Note>
+  If you have a large collection, consider implementing pagination on the client side or contacting the API provider about pagination options.
+</Note>
+
+## See Also
+
+- [Get Sticker](/api/laminas/get) - Get details of a specific sticker by ID
+- [Create Sticker](/api/laminas/create) - Add a new sticker to your collection
+- [Bulk Upload](/api/laminas/bulk-upload) - Add multiple stickers at once

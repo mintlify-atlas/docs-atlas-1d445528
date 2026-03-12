@@ -1,0 +1,572 @@
+---
+title: 'Docker Deployment'
+description: 'Deploy the Album Collection Manager API using Docker and Docker Compose'
+icon: 'docker'
+---
+
+## Overview
+
+The Album Collection Manager includes a multi-stage Dockerfile for building and running the application in containerized environments. This guide covers local Docker deployment and production strategies.
+
+## Dockerfile Breakdown
+
+The project uses a multi-stage build to optimize image size and security:
+
+```dockerfile
+# Stage 1: Build with Maven and Java 21
+FROM maven:3.9-eclipse-temurin-21 AS build
+
+WORKDIR /app
+
+# Copy POM first to leverage Docker layer caching
+COPY pom.xml .
+RUN mvn -q -e -B dependency:go-offline
+
+# Copy source code and build JAR
+COPY src ./src
+RUN mvn -q -e -B clean package -DskipTests
+
+# Stage 2: Runtime with lightweight JRE
+FROM eclipse-temurin:21-jre
+
+WORKDIR /app
+
+# Copy JAR from build stage
+COPY --from=build /app/target/examen-0.0.1-SNAPSHOT.jar app.jar
+
+# Expose Spring Boot default port
+EXPOSE 8080
+
+# Allow JVM options via environment variable
+ENV JAVA_OPTS=""
+
+# Start application
+ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar app.jar"]
+```
+
+### Key Features
+
+<AccordionGroup>
+  <Accordion title="Multi-Stage Build" icon="layer-group">
+    - **Build Stage**: Uses full Maven image with JDK 21
+    - **Runtime Stage**: Uses lightweight JRE-only image
+    - **Result**: Smaller final image (~300MB vs ~800MB)
+  </Accordion>
+
+  <Accordion title="Layer Caching" icon="server">
+    - Dependencies downloaded first (changes infrequently)
+    - Source code copied after (changes frequently)
+    - Faster rebuilds when only code changes
+  </Accordion>
+
+  <Accordion title="JVM Customization" icon="sliders">
+    - `JAVA_OPTS` environment variable for runtime tuning
+    - Configure memory, GC, debugging, etc.
+    - Example: `-Xmx512m -XX:+UseG1GC`
+  </Accordion>
+
+  <Accordion title="Security" icon="shield">
+    - No build tools in final image
+    - Minimal attack surface
+    - Only runtime dependencies included
+  </Accordion>
+</AccordionGroup>
+
+## Local Development with Docker
+
+### Build the Image
+
+<Steps>
+  <Step title="Navigate to Project Root">
+    Ensure you're in the directory containing the Dockerfile:
+    ```bash
+    cd /path/to/album-collection-manager
+    ```
+  </Step>
+
+  <Step title="Build Docker Image">
+    Build the image with a tag:
+    ```bash
+    docker build -t album-api:latest .
+    ```
+    
+    Build with custom tag:
+    ```bash
+    docker build -t album-api:v1.0.0 .
+    ```
+  </Step>
+
+  <Step title="Verify Image">
+    List built images:
+    ```bash
+    docker images | grep album-api
+    ```
+  </Step>
+</Steps>
+
+### Run the Container
+
+<CodeGroup>
+
+```bash Basic Run
+# Run with H2 in-memory database (development)
+docker run -d \
+  --name album-api \
+  -p 8080:8080 \
+  album-api:latest
+```
+
+```bash With Environment Variables
+# Run with custom JVM options and profile
+docker run -d \
+  --name album-api \
+  -p 8080:8080 \
+  -e JAVA_OPTS="-Xmx512m -Xms256m" \
+  -e SPRING_PROFILES_ACTIVE=dev \
+  album-api:latest
+```
+
+```bash With MySQL Connection
+# Run connected to external MySQL
+docker run -d \
+  --name album-api \
+  -p 8080:8080 \
+  -e SPRING_PROFILES_ACTIVE=prod \
+  -e DB_HOST=mysql-server \
+  -e DB_NAME=album_db \
+  -e DB_USER=app_user \
+  -e DB_PASSWORD=secure_password \
+  album-api:latest
+```
+
+</CodeGroup>
+
+### Verify Deployment
+
+```bash
+# Check container status
+docker ps
+
+# View logs
+docker logs album-api
+
+# Follow logs in real-time
+docker logs -f album-api
+
+# Test API
+curl http://localhost:8080/api/albums
+```
+
+## Docker Compose Setup
+
+For a complete development environment with MySQL, use Docker Compose:
+
+### Create docker-compose.yml
+
+```yaml
+version: '3.8'
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: album-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: album_collection_manager
+      MYSQL_USER: app_user
+      MYSQL_PASSWORD: app_password
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - album-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 10
+
+  api:
+    build: .
+    container_name: album-api
+    depends_on:
+      mysql:
+        condition: service_healthy
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      DB_HOST: mysql
+      DB_NAME: album_collection_manager
+      DB_USER: app_user
+      DB_PASSWORD: app_password
+      JAVA_OPTS: "-Xmx512m -Xms256m"
+    ports:
+      - "8080:8080"
+    networks:
+      - album-network
+    restart: unless-stopped
+
+volumes:
+  mysql_data:
+
+networks:
+  album-network:
+    driver: bridge
+```
+
+### Using Docker Compose
+
+<Steps>
+  <Step title="Start Services">
+    Launch all services in detached mode:
+    ```bash
+    docker-compose up -d
+    ```
+    
+    Build and start:
+    ```bash
+    docker-compose up -d --build
+    ```
+  </Step>
+
+  <Step title="View Logs">
+    Check logs for all services:
+    ```bash
+    docker-compose logs -f
+    ```
+    
+    Check specific service:
+    ```bash
+    docker-compose logs -f api
+    ```
+  </Step>
+
+  <Step title="Verify Health">
+    Check service status:
+    ```bash
+    docker-compose ps
+    ```
+  </Step>
+
+  <Step title="Stop Services">
+    Stop containers:
+    ```bash
+    docker-compose down
+    ```
+    
+    Stop and remove volumes:
+    ```bash
+    docker-compose down -v
+    ```
+  </Step>
+</Steps>
+
+## Production Deployment
+
+### Environment Variables
+
+For production, externalize configuration using environment variables:
+
+```bash
+# Create .env file (DO NOT COMMIT)
+SPRING_PROFILES_ACTIVE=prod
+DB_HOST=production-mysql.example.com
+DB_NAME=album_production
+DB_USER=prod_user
+DB_PASSWORD=super_secure_password_here
+JAVA_OPTS=-Xmx1g -Xms512m -XX:+UseG1GC
+```
+
+Reference in docker-compose:
+
+```yaml
+services:
+  api:
+    env_file:
+      - .env
+    # ... rest of config
+```
+
+### Resource Limits
+
+Set resource constraints for production:
+
+```yaml
+services:
+  api:
+    deploy:
+      resources:
+        limits:
+          cpus: '1.0'
+          memory: 1G
+        reservations:
+          cpus: '0.5'
+          memory: 512M
+    # ... rest of config
+```
+
+### Health Checks
+
+Add health checks for better orchestration:
+
+```yaml
+services:
+  api:
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    # ... rest of config
+```
+
+<Note>
+  Ensure Spring Boot Actuator is enabled for health endpoint:
+  ```properties
+  management.endpoints.web.exposure.include=health,info
+  management.endpoint.health.show-details=always
+  ```
+</Note>
+
+## Cloud Deployment
+
+### AWS ECS
+
+<Steps>
+  <Step title="Push to ECR">
+    ```bash
+    # Authenticate to ECR
+    aws ecr get-login-password --region us-east-1 | \
+      docker login --username AWS --password-stdin \
+      123456789012.dkr.ecr.us-east-1.amazonaws.com
+    
+    # Tag image
+    docker tag album-api:latest \
+      123456789012.dkr.ecr.us-east-1.amazonaws.com/album-api:latest
+    
+    # Push to ECR
+    docker push 123456789012.dkr.ecr.us-east-1.amazonaws.com/album-api:latest
+    ```
+  </Step>
+
+  <Step title="Create ECS Task Definition">
+    Define task with environment variables pointing to RDS:
+    ```json
+    {
+      "containerDefinitions": [{
+        "name": "album-api",
+        "image": "123456789012.dkr.ecr.us-east-1.amazonaws.com/album-api:latest",
+        "environment": [
+          {"name": "SPRING_PROFILES_ACTIVE", "value": "prod"},
+          {"name": "DB_HOST", "value": "db-ipss.cb2es8a2cxpo.us-east-2.rds.amazonaws.com"}
+        ],
+        "secrets": [
+          {"name": "DB_PASSWORD", "valueFrom": "arn:aws:secretsmanager:..."}
+        ]
+      }]
+    }
+    ```
+  </Step>
+
+  <Step title="Deploy Service">
+    ```bash
+    aws ecs create-service \
+      --cluster album-cluster \
+      --service-name album-api-service \
+      --task-definition album-api:1 \
+      --desired-count 2
+    ```
+  </Step>
+</Steps>
+
+### Google Cloud Run
+
+<Steps>
+  <Step title="Build and Push to GCR">
+    ```bash
+    # Build for Cloud Run
+    gcloud builds submit --tag gcr.io/PROJECT_ID/album-api
+    ```
+  </Step>
+
+  <Step title="Deploy to Cloud Run">
+    ```bash
+    gcloud run deploy album-api \
+      --image gcr.io/PROJECT_ID/album-api \
+      --platform managed \
+      --region us-central1 \
+      --set-env-vars SPRING_PROFILES_ACTIVE=prod \
+      --set-env-vars DB_HOST=CLOUD_SQL_CONNECTION \
+      --allow-unauthenticated
+    ```
+  </Step>
+</Steps>
+
+### Kubernetes
+
+Deploy to Kubernetes cluster:
+
+```yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: album-api
+spec:
+  replicas: 3
+  selector:
+    matchLabels:
+      app: album-api
+  template:
+    metadata:
+      labels:
+        app: album-api
+    spec:
+      containers:
+      - name: album-api
+        image: album-api:latest
+        ports:
+        - containerPort: 8080
+        env:
+        - name: SPRING_PROFILES_ACTIVE
+          value: "prod"
+        - name: DB_HOST
+          valueFrom:
+            configMapKeyRef:
+              name: db-config
+              key: host
+        - name: DB_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: db-secret
+              key: password
+        resources:
+          requests:
+            memory: "512Mi"
+            cpu: "500m"
+          limits:
+            memory: "1Gi"
+            cpu: "1000m"
+        livenessProbe:
+          httpGet:
+            path: /actuator/health
+            port: 8080
+          initialDelaySeconds: 60
+          periodSeconds: 10
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: album-api-service
+spec:
+  selector:
+    app: album-api
+  ports:
+  - protocol: TCP
+    port: 80
+    targetPort: 8080
+  type: LoadBalancer
+```
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Container Exits Immediately" icon="circle-xmark">
+    **Check logs**:
+    ```bash
+    docker logs album-api
+    ```
+    
+    **Common causes**:
+    - Missing database connection
+    - Invalid environment variables
+    - Port already in use
+    - Application startup errors
+  </Accordion>
+
+  <Accordion title="Cannot Connect to Database" icon="database">
+    **Solutions**:
+    - Verify network connectivity: `docker network inspect album-network`
+    - Check MySQL is running: `docker-compose ps`
+    - Verify credentials in environment variables
+    - Use service name as host: `DB_HOST=mysql` (not `localhost`)
+  </Accordion>
+
+  <Accordion title="Port Already in Use" icon="plug">
+    **Error**: `Bind for 0.0.0.0:8080 failed: port is already allocated`
+    
+    **Solutions**:
+    ```bash
+    # Find process using port
+    lsof -i :8080
+    
+    # Use different port
+    docker run -p 8081:8080 album-api:latest
+    ```
+  </Accordion>
+
+  <Accordion title="Out of Memory" icon="memory">
+    **Symptoms**: Container crashes, OOMKilled status
+    
+    **Solutions**:
+    ```bash
+    # Increase Java heap size
+    docker run -e JAVA_OPTS="-Xmx1g -Xms512m" album-api:latest
+    
+    # Increase Docker memory limit
+    docker run --memory="1g" album-api:latest
+    ```
+  </Accordion>
+</AccordionGroup>
+
+## Best Practices
+
+<Warning>
+  Never include sensitive data (passwords, keys) in Dockerfile or commit them to version control.
+</Warning>
+
+<Steps>
+  <Step title="Use .dockerignore">
+    Exclude unnecessary files from build context:
+    ```
+    target/
+    .git/
+    .idea/
+    *.md
+    .env
+    ```
+  </Step>
+
+  <Step title="Tag Images Properly">
+    Use semantic versioning and tags:
+    ```bash
+    docker build -t album-api:1.2.3 .
+    docker build -t album-api:latest .
+    ```
+  </Step>
+
+  <Step title="Scan for Vulnerabilities">
+    Regularly scan images:
+    ```bash
+    docker scan album-api:latest
+    ```
+  </Step>
+
+  <Step title="Use Non-Root User">
+    Add to Dockerfile for better security:
+    ```dockerfile
+    RUN addgroup --system spring && adduser --system spring --ingroup spring
+    USER spring:spring
+    ```
+  </Step>
+</Steps>
+
+## Related Resources
+
+<CardGroup cols={2}>
+  <Card title="Database Setup" icon="database" href="/guides/database-setup">
+    Configure MySQL for production deployment
+  </Card>
+  <Card title="Error Handling" icon="triangle-exclamation" href="/guides/error-handling">
+    Monitor and debug containerized applications
+  </Card>
+</CardGroup>

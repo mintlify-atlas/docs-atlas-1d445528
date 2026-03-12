@@ -1,0 +1,126 @@
+---
+title: 'Create Album'
+api: 'POST /api/albums'
+description: 'Create a new album'
+---
+
+## Request Body
+
+<ParamField body="nombre" type="string" required>
+  Album name. Must be between 2 and 100 characters.
+  
+  **Validation:**
+  - Required field
+  - Minimum length: 2 characters
+  - Maximum length: 100 characters
+</ParamField>
+
+<ParamField body="year" type="integer" required>
+  Release year of the album.
+  
+  **Validation:**
+  - Required field
+  - Minimum value: 1900
+  - Maximum value: 2100
+</ParamField>
+
+<ParamField body="descripcion" type="string" required>
+  Album description.
+  
+  **Validation:**
+  - Required field
+  - Maximum length: 500 characters
+</ParamField>
+
+## Response
+
+<ResponseField name="success" type="boolean">
+  Indicates if the request was successful
+</ResponseField>
+
+<ResponseField name="message" type="string">
+  Response message: "Álbum creado exitosamente"
+</ResponseField>
+
+<ResponseField name="data" type="object">
+  The created album object
+  
+  <ResponseField name="data.id" type="long">
+    Unique identifier for the album
+  </ResponseField>
+  
+  <ResponseField name="data.nombre" type="string">
+    Album name
+  </ResponseField>
+  
+  <ResponseField name="data.year" type="integer">
+    Release year
+  </ResponseField>
+  
+  <ResponseField name="data.descripcion" type="string">
+    Album description
+  </ResponseField>
+  
+  <ResponseField name="data.createdAt" type="string">
+    ISO 8601 timestamp of creation
+  </ResponseField>
+  
+  <ResponseField name="data.updatedAt" type="string">
+    ISO 8601 timestamp of last update
+  </ResponseField>
+</ResponseField>
+
+<ResponseField name="timestamp" type="string">
+  ISO 8601 timestamp of the response
+</ResponseField>
+
+## Example Request
+
+```bash cURL
+curl -X POST http://localhost:8080/api/albums \
+  -H "Content-Type: application/json" \
+  -d '{
+    "nombre": "Mundial Qatar 2022",
+    "year": 2022,
+    "descripcion": "Álbum oficial de la Copa Mundial de la FIFA Qatar 2022"
+  }'
+```
+
+```json Request Body
+{
+  "nombre": "Mundial Qatar 2022",
+  "year": 2022,
+  "descripcion": "Álbum oficial de la Copa Mundial de la FIFA Qatar 2022"
+}
+```
+
+## Example Response
+
+```json 201 Created
+{
+  "success": true,
+  "message": "Álbum creado exitosamente",
+  "data": {
+    "id": 1,
+    "nombre": "Mundial Qatar 2022",
+    "year": 2022,
+    "descripcion": "Álbum oficial de la Copa Mundial de la FIFA Qatar 2022",
+    "createdAt": "2026-03-12T10:30:00",
+    "updatedAt": "2026-03-12T10:30:00"
+  },
+  "timestamp": "2026-03-12T10:30:00"
+}
+```
+
+```json 400 Validation Error
+{
+  "success": false,
+  "message": "Validation failed",
+  "errorCode": "VALIDATION_ERROR",
+  "errors": {
+    "nombre": "El nombre del álbum es obligatorio",
+    "year": "El año debe ser mayor a 1900"
+  },
+  "timestamp": "2026-03-12T10:30:00"
+}
+```

@@ -1,0 +1,367 @@
+---
+title: 'Bulk Upload Stickers'
+api: 'POST /api/laminas/masivo'
+description: 'Upload multiple stickers in a single request with detailed validation results'
+---
+
+## Overview
+
+The bulk upload endpoint allows you to add multiple stickers to an album in a single API call. Each sticker is validated independently, and the response includes detailed status information for each one.
+
+<Note>
+  Unlike single sticker creation, bulk upload continues processing all stickers even if some fail validation. This ensures you get a complete picture of what succeeded and what failed.
+</Note>
+
+## Request Body
+
+<ParamField body="albumId" type="number" required>
+  The ID of the album to add all stickers to
+</ParamField>
+
+<ParamField body="laminas" type="array" required>
+  Array of sticker objects to add. Must contain at least one sticker.
+  
+  <ParamField body="laminas[].nombre" type="string" required>
+    Sticker name (must exist in catalog)
+  </ParamField>
+  
+  <ParamField body="laminas[].imagen" type="string">
+    URL or path to the sticker image
+  </ParamField>
+  
+  <ParamField body="laminas[].fechaLanzamiento" type="string" required>
+    Release date in ISO 8601 format (YYYY-MM-DD)
+  </ParamField>
+  
+  <ParamField body="laminas[].tipoLamina" type="string" required>
+    Type/category of the sticker
+  </ParamField>
+  
+  <Warning>
+    Do not include `albumId` inside individual sticker objects. The album ID is specified at the top level and applies to all stickers.
+  </Warning>
+</ParamField>
+
+## Response
+
+<ResponseField name="success" type="boolean">
+  `true` if all stickers were added successfully, `false` if any failed
+</ResponseField>
+
+<ResponseField name="message" type="string">
+  Summary message with counts of successful and failed uploads
+  
+  Example: `"Carga masiva completada: 5 exitosas, 2 fallidas"`
+</ResponseField>
+
+<ResponseField name="data" type="array">
+  Array of results, one for each sticker in the request (in the same order)
+  
+  <ResponseField name="data[].laminaId" type="number">
+    ID of the created sticker, or `null` if creation failed
+  </ResponseField>
+  
+  <ResponseField name="data[].nombre" type="string">
+    Name of the sticker from the request
+  </ResponseField>
+  
+  <ResponseField name="data[].esRepetida" type="boolean">
+    `true` if this sticker already existed in the collection
+  </ResponseField>
+  
+  <ResponseField name="data[].cantidadRepetidas" type="number">
+    Total number of copies after this upload (0 if failed)
+  </ResponseField>
+  
+  <ResponseField name="data[].estaEnCatalogo" type="boolean">
+    `true` if the sticker exists in the album's catalog, `false` otherwise
+  </ResponseField>
+  
+  <ResponseField name="data[].estado" type="string">
+    Status message for this specific sticker:
+    - `"✓ AGREGADA (Nueva)"` - Successfully added as new
+    - `"✓ AGREGADA (Repetida: X copias)"` - Successfully added as duplicate
+    - `"❌ NO AGREGADA: No está en el catálogo"` - Failed: not in catalog
+    - `"❌ ERROR: [error message]"` - Failed with error
+  </ResponseField>
+</ResponseField>
+
+<ResponseField name="timestamp" type="string">
+  ISO 8601 timestamp of the response
+</ResponseField>
+
+## Examples
+
+### Successful Bulk Upload
+
+<CodeGroup>
+```bash cURL
+curl -X POST https://api.example.com/api/laminas/masivo \
+  -H "Content-Type: application/json" \
+  -d '{
+    "albumId": 1,
+    "laminas": [
+      {
+        "nombre": "Lionel Messi",
+        "imagen": "https://example.com/messi.jpg",
+        "fechaLanzamiento": "2024-01-15",
+        "tipoLamina": "especial"
+      },
+      {
+        "nombre": "Cristiano Ronaldo",
+        "imagen": "https://example.com/ronaldo.jpg",
+        "fechaLanzamiento": "2024-01-15",
+        "tipoLamina": "especial"
+      },
+      {
+        "nombre": "Neymar Jr",
+        "imagen": "https://example.com/neymar.jpg",
+        "fechaLanzamiento": "2024-01-20",
+        "tipoLamina": "normal"
+      }
+    ]
+  }'
+```
+
+```json Response (All Successful)
+{
+  "success": true,
+  "message": "Carga masiva completada: 3 exitosas, 0 fallidas",
+  "data": [
+    {
+      "laminaId": 101,
+      "nombre": "Lionel Messi",
+      "esRepetida": false,
+      "cantidadRepetidas": 1,
+      "estaEnCatalogo": true,
+      "estado": "✓ AGREGADA (Nueva)"
+    },
+    {
+      "laminaId": 102,
+      "nombre": "Cristiano Ronaldo",
+      "esRepetida": false,
+      "cantidadRepetidas": 1,
+      "estaEnCatalogo": true,
+      "estado": "✓ AGREGADA (Nueva)"
+    },
+    {
+      "laminaId": 103,
+      "nombre": "Neymar Jr",
+      "esRepetida": false,
+      "cantidadRepetidas": 1,
+      "estaEnCatalogo": true,
+      "estado": "✓ AGREGADA (Nueva)"
+    }
+  ],
+  "timestamp": "2026-03-12T10:30:00"
+}
+```
+</CodeGroup>
+
+### Mixed Results (Some Success, Some Failure)
+
+<CodeGroup>
+```bash cURL
+curl -X POST https://api.example.com/api/laminas/masivo \
+  -H "Content-Type: application/json" \
+  -d '{
+    "albumId": 1,
+    "laminas": [
+      {
+        "nombre": "Lionel Messi",
+        "imagen": "https://example.com/messi.jpg",
+        "fechaLanzamiento": "2024-01-15",
+        "tipoLamina": "especial"
+      },
+      {
+        "nombre": "Unknown Player",
+        "imagen": "https://example.com/unknown.jpg",
+        "fechaLanzamiento": "2024-01-15",
+        "tipoLamina": "normal"
+      },
+      {
+        "nombre": "Lionel Messi",
+        "imagen": "https://example.com/messi2.jpg",
+        "fechaLanzamiento": "2024-01-15",
+        "tipoLamina": "especial"
+      }
+    ]
+  }'
+```
+
+```json Response (Mixed)
+{
+  "success": false,
+  "message": "Carga masiva completada: 2 exitosas, 1 fallidas",
+  "data": [
+    {
+      "laminaId": 104,
+      "nombre": "Lionel Messi",
+      "esRepetida": false,
+      "cantidadRepetidas": 1,
+      "estaEnCatalogo": true,
+      "estado": "✓ AGREGADA (Nueva)"
+    },
+    {
+      "laminaId": null,
+      "nombre": "Unknown Player",
+      "esRepetida": false,
+      "cantidadRepetidas": 0,
+      "estaEnCatalogo": false,
+      "estado": "❌ NO AGREGADA: No está en el catálogo"
+    },
+    {
+      "laminaId": 105,
+      "nombre": "Lionel Messi",
+      "esRepetida": true,
+      "cantidadRepetidas": 2,
+      "estaEnCatalogo": true,
+      "estado": "✓ AGREGADA (Repetida: 2 copias)"
+    }
+  ],
+  "timestamp": "2026-03-12T10:30:00"
+}
+```
+</CodeGroup>
+
+### Adding Duplicates
+
+<CodeGroup>
+```bash cURL
+curl -X POST https://api.example.com/api/laminas/masivo \
+  -H "Content-Type: application/json" \
+  -d '{
+    "albumId": 1,
+    "laminas": [
+      {
+        "nombre": "Lionel Messi",
+        "imagen": "https://example.com/messi.jpg",
+        "fechaLanzamiento": "2024-01-15",
+        "tipoLamina": "especial"
+      },
+      {
+        "nombre": "Lionel Messi",
+        "imagen": "https://example.com/messi.jpg",
+        "fechaLanzamiento": "2024-01-15",
+        "tipoLamina": "especial"
+      }
+    ]
+  }'
+```
+
+```json Response (Duplicates)
+{
+  "success": true,
+  "message": "Carga masiva completada: 2 exitosas, 0 fallidas",
+  "data": [
+    {
+      "laminaId": 106,
+      "nombre": "Lionel Messi",
+      "esRepetida": true,
+      "cantidadRepetidas": 3,
+      "estaEnCatalogo": true,
+      "estado": "✓ AGREGADA (Repetida: 3 copias)"
+    },
+    {
+      "laminaId": 107,
+      "nombre": "Lionel Messi",
+      "esRepetida": true,
+      "cantidadRepetidas": 4,
+      "estaEnCatalogo": true,
+      "estado": "✓ AGREGADA (Repetida: 4 copias)"
+    }
+  ],
+  "timestamp": "2026-03-12T10:30:00"
+}
+```
+</CodeGroup>
+
+## Error Responses
+
+### Empty Sticker Array
+
+```json
+{
+  "success": false,
+  "message": "Debe proporcionar al menos una lámina",
+  "timestamp": "2026-03-12T10:30:00"
+}
+```
+
+### Missing Album ID
+
+```json
+{
+  "success": false,
+  "message": "El ID del álbum es obligatorio",
+  "timestamp": "2026-03-12T10:30:00"
+}
+```
+
+### No Catalog Defined
+
+```json
+{
+  "success": false,
+  "message": "Debe crear un catálogo de láminas primero",
+  "timestamp": "2026-03-12T10:30:00"
+}
+```
+
+### Album Not Found
+
+```json
+{
+  "success": false,
+  "message": "Álbum with ID 999 not found",
+  "timestamp": "2026-03-12T10:30:00"
+}
+```
+
+## Validation Process
+
+For each sticker in the bulk upload, the API performs the following validations:
+
+1. **Catalog Check**: Verifies the sticker name exists in the album's catalog (case-insensitive)
+2. **Duplicate Detection**: Searches for existing stickers with the same name
+3. **Field Validation**: Validates required fields (nombre, fechaLanzamiento, tipoLamina)
+4. **Creation**: Creates the sticker record if all validations pass
+
+<Warning>
+  If a sticker is not in the catalog, it will NOT be added. The API will mark it as failed and continue processing the remaining stickers.
+</Warning>
+
+## Duplicate Counting Logic
+
+When processing duplicates in bulk uploads:
+
+- Each sticker is processed sequentially
+- The count includes previously existing stickers PLUS stickers added earlier in the same bulk request
+- Example: If you have 2 copies of "Messi" and upload 3 more in one request:
+  - 1st upload: `cantidadRepetidas = 3` (2 existing + 1 new)
+  - 2nd upload: `cantidadRepetidas = 4` (2 existing + 2 new)
+  - 3rd upload: `cantidadRepetidas = 5` (2 existing + 3 new)
+
+## Response Status Codes
+
+- **201 Created**: Stickers were processed (some or all may have succeeded)
+- **400 Bad Request**: Invalid request body or validation errors
+- **404 Not Found**: Album not found
+- **500 Internal Server Error**: Unexpected server error
+
+<Note>
+  The HTTP status code is 201 even if some stickers fail. Check the `success` field and individual sticker `estado` values to determine the actual results.
+</Note>
+
+## Best Practices
+
+1. **Batch Size**: Keep bulk uploads to a reasonable size (e.g., 100-500 stickers) to avoid timeouts
+2. **Error Handling**: Always check the `success` field and iterate through results to identify failures
+3. **Retry Logic**: For failed stickers, fix the issues (e.g., add to catalog) and retry in a new request
+4. **Idempotency**: Since duplicates are allowed, you can safely retry the entire batch if needed
+
+## See Also
+
+- [Create Sticker](/api/laminas/create) - Add a single sticker
+- [List Stickers](/api/laminas/list) - View your sticker collection
+- [Overview](/api/laminas/overview) - Learn about catalog validation

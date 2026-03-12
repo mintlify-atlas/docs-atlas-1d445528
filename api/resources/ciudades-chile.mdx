@@ -1,0 +1,103 @@
+---
+title: "Ciudades Chile"
+description: "Manage Chilean cities data"
+---
+
+## List All Cities
+
+<RequestExample>
+```bash cURL
+curl -X GET http://localhost:8080/api/ciudades-chile \
+  -H "Content-Type: application/json"
+```
+</RequestExample>
+
+<ResponseExample>
+```json 200
+{
+  "status": "success",
+  "message": "Ciudades de Chile recuperadas exitosamente",
+  "data": [
+    {
+      "id": 1,
+      "nombre": "Santiago",
+      "poblacion": 7000000
+    },
+    {
+      "id": 2,
+      "nombre": "Valparaíso",
+      "poblacion": 300000
+    }
+  ],
+  "timestamp": "2026-03-12T10:30:00"
+}
+```
+</ResponseExample>
+
+### Response Fields
+
+<ResponseField name="data" type="array">
+  Array of ciudad objects
+  
+  <Expandable title="ciudad object">
+    <ResponseField name="id" type="long">
+      Unique identifier for the city
+    </ResponseField>
+    
+    <ResponseField name="nombre" type="string">
+      City name
+    </ResponseField>
+    
+    <ResponseField name="poblacion" type="long">
+      Population count
+    </ResponseField>
+  </Expandable>
+</ResponseField>
+
+---
+
+## Get City by ID
+
+<RequestExample>
+```bash cURL
+curl -X GET http://localhost:8080/api/ciudades-chile/1 \
+  -H "Content-Type: application/json"
+```
+</RequestExample>
+
+<ResponseExample>
+```json 200
+{
+  "status": "success",
+  "message": "Ciudad de Chile recuperada exitosamente",
+  "data": {
+    "id": 1,
+    "nombre": "Santiago",
+    "poblacion": 7000000
+  },
+  "timestamp": "2026-03-12T10:30:00"
+}
+```
+</ResponseExample>
+
+### Path Parameters
+
+<ParamField path="id" type="long" required>
+  The ID of the city to retrieve
+</ParamField>
+
+### Response Fields
+
+<ResponseField name="data" type="object">
+  <ResponseField name="id" type="long">
+    Unique identifier for the city
+  </ResponseField>
+  
+  <ResponseField name="nombre" type="string">
+    City name
+  </ResponseField>
+  
+  <ResponseField name="poblacion" type="long">
+    Population count
+  </ResponseField>
+</ResponseField>

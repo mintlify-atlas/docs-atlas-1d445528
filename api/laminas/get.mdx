@@ -1,0 +1,219 @@
+---
+title: 'Get Sticker'
+api: 'GET /api/laminas/{id}'
+description: 'Retrieve a specific sticker by its ID'
+---
+
+## Overview
+
+Retrieve detailed information about a specific sticker using its unique identifier.
+
+## Path Parameters
+
+<ParamField path="id" type="number" required>
+  The unique ID of the sticker to retrieve
+</ParamField>
+
+## Response
+
+<ResponseField name="success" type="boolean">
+  Indicates if the operation was successful
+</ResponseField>
+
+<ResponseField name="message" type="string">
+  Success message
+  
+  Example: `"Lámina obtenida correctamente"`
+</ResponseField>
+
+<ResponseField name="data" type="object">
+  The sticker object
+  
+  <ResponseField name="id" type="number">
+    Unique identifier for the sticker
+  </ResponseField>
+  
+  <ResponseField name="nombre" type="string">
+    Sticker name
+  </ResponseField>
+  
+  <ResponseField name="imagen" type="string">
+    URL or path to the sticker image
+  </ResponseField>
+  
+  <ResponseField name="fechaLanzamiento" type="string">
+    Release date in ISO 8601 format (YYYY-MM-DD)
+  </ResponseField>
+  
+  <ResponseField name="tipoLamina" type="string">
+    Type/category of the sticker
+  </ResponseField>
+  
+  <ResponseField name="createdAt" type="string">
+    Timestamp when the sticker was created
+  </ResponseField>
+  
+  <ResponseField name="updatedAt" type="string">
+    Timestamp when the sticker was last updated
+  </ResponseField>
+  
+  <ResponseField name="active" type="boolean">
+    Whether the sticker is active
+  </ResponseField>
+  
+  <ResponseField name="album" type="object">
+    Basic information about the associated album
+    
+    <ResponseField name="album.id" type="number">
+      Album ID
+    </ResponseField>
+    
+    <ResponseField name="album.nombre" type="string">
+      Album name
+    </ResponseField>
+    
+    <ResponseField name="album.year" type="number">
+      Album year
+    </ResponseField>
+  </ResponseField>
+</ResponseField>
+
+<ResponseField name="timestamp" type="string">
+  ISO 8601 timestamp of the response
+</ResponseField>
+
+## Examples
+
+### Get Sticker by ID
+
+<CodeGroup>
+```bash cURL
+curl -X GET https://api.example.com/api/laminas/101
+```
+
+```json Response
+{
+  "success": true,
+  "message": "Lámina obtenida correctamente",
+  "data": {
+    "id": 101,
+    "nombre": "Lionel Messi",
+    "imagen": "https://example.com/images/messi.jpg",
+    "fechaLanzamiento": "2024-01-15",
+    "tipoLamina": "especial",
+    "createdAt": "2026-03-12T10:30:00",
+    "updatedAt": "2026-03-12T10:30:00",
+    "active": true,
+    "album": {
+      "id": 1,
+      "nombre": "FIFA World Cup Qatar 2022",
+      "year": 2022
+    }
+  },
+  "timestamp": "2026-03-12T10:35:00"
+}
+```
+</CodeGroup>
+
+### Inactive (Deleted) Sticker
+
+<CodeGroup>
+```bash cURL
+curl -X GET https://api.example.com/api/laminas/99
+```
+
+```json Response
+{
+  "success": true,
+  "message": "Lámina obtenida correctamente",
+  "data": {
+    "id": 99,
+    "nombre": "Deleted Player",
+    "imagen": "https://example.com/images/player.jpg",
+    "fechaLanzamiento": "2024-01-10",
+    "tipoLamina": "normal",
+    "createdAt": "2026-03-10T09:00:00",
+    "updatedAt": "2026-03-11T14:20:00",
+    "active": false,
+    "album": {
+      "id": 1,
+      "nombre": "FIFA World Cup Qatar 2022",
+      "year": 2022
+    }
+  },
+  "timestamp": "2026-03-12T10:35:00"
+}
+```
+</CodeGroup>
+
+<Note>
+  Unlike the list endpoints, GET by ID will return inactive (deleted) stickers if you know their ID. Check the `active` field to determine status.
+</Note>
+
+## Error Responses
+
+### Sticker Not Found
+
+```json
+{
+  "success": false,
+  "message": "Lámina with ID 999 not found",
+  "timestamp": "2026-03-12T10:35:00"
+}
+```
+
+### Invalid ID Format
+
+```json
+{
+  "success": false,
+  "message": "Invalid ID format",
+  "timestamp": "2026-03-12T10:35:00"
+}
+```
+
+## Use Cases
+
+### Verify Sticker Details
+
+After creating a sticker, use this endpoint to verify it was created correctly with all the expected fields.
+
+### Get Latest Information
+
+Retrieve the most up-to-date information about a sticker, including any updates made via the update endpoint.
+
+### Check Deletion Status
+
+Verify if a sticker has been soft-deleted by checking the `active` field.
+
+## Timestamps
+
+The response includes two important timestamps:
+
+- **createdAt**: When the sticker was first added to the collection
+- **updatedAt**: When the sticker was last modified (equals `createdAt` if never updated)
+
+These can be useful for:
+- Tracking collection growth over time
+- Identifying recently modified stickers
+- Auditing changes
+
+## Related Endpoints
+
+<CardGroup cols={2}>
+  <Card title="List Stickers" icon="list" href="/api/laminas/list">
+    Get all stickers or filter by album
+  </Card>
+  <Card title="Update Sticker" icon="pen" href="/api/laminas/update">
+    Modify this sticker's information
+  </Card>
+  <Card title="Delete Sticker" icon="trash" href="/api/laminas/delete">
+    Soft delete this sticker
+  </Card>
+</CardGroup>
+
+## See Also
+
+- [Create Sticker](/api/laminas/create) - Add a new sticker
+- [Update Sticker](/api/laminas/update) - Modify sticker details
+- [Delete Sticker](/api/laminas/delete) - Remove a sticker from your collection

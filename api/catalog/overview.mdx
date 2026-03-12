@@ -1,0 +1,91 @@
+---
+title: 'Catalog Overview'
+description: 'Manage sticker catalogs for albums'
+icon: 'book'
+---
+
+## What is a Catalog?
+
+A **catalog** defines all the available stickers for a specific album. Think of it as the master list of all possible stickers that collectors can obtain for that album.
+
+## Key Concepts
+
+### Catalog Structure
+
+Each catalog entry contains:
+- **Name**: Unique identifier for the sticker
+- **Image**: Optional image URL
+- **Release Date**: When the sticker was released
+- **Type**: Category of the sticker (e.g., "común", "especial", "dorada")
+
+### Business Rules
+
+<Warning>
+  **One Catalog Per Album**: Each album can only have ONE catalog. Once created, you cannot create another catalog for the same album. This ensures data integrity and prevents conflicts.
+</Warning>
+
+The system enforces this rule at `LaminaService.java:48-51`:
+
+```java
+// Validar que no exista catálogo previo
+long existentes = laminaCatalogoRepository.countByAlbumAndActiveTrue(album);
+if (existentes > 0) {
+    throw new RuntimeException("Este álbum ya tiene un catálogo de láminas definido");
+}
+```
+
+### Validation Requirements
+
+Users can **only add stickers** that exist in the catalog (`LaminaService.java:74-84`). Attempting to add a sticker not in the catalog will result in an error:
+
+```
+❌ ERROR: La lámina 'nombre' NO existe en el catálogo del álbum. 
+Solo puedes agregar láminas que están definidas en el catálogo.
+```
+
+## Available Endpoints
+
+<CardGroup cols={2}>
+  <Card title="Create Catalog" icon="plus" href="/api/catalog/create">
+    Initialize a new catalog for an album
+  </Card>
+  
+  <Card title="Get Catalog" icon="list" href="/api/catalog/get">
+    Retrieve all stickers in a catalog
+  </Card>
+  
+  <Card title="Get Status" icon="chart-pie" href="/api/catalog/status">
+    View collection statistics and progress
+  </Card>
+</CardGroup>
+
+## Typical Workflow
+
+1. **Create Album**: First, create an album using the [Albums API](/api/albums/create)
+2. **Create Catalog**: Define all possible stickers for that album
+3. **Add Stickers**: Users can now add stickers from the catalog to their collection
+4. **Check Status**: Monitor collection progress (possessed, missing, repeated stickers)
+
+## Error Handling
+
+All catalog endpoints return the standard `ApiResponseDTO` wrapper:
+
+```json
+{
+  "success": true,
+  "message": "Catálogo creado exitosamente con 638 láminas",
+  "data": [...],
+  "timestamp": "2026-03-12T10:30:00"
+}
+```
+
+For errors:
+
+```json
+{
+  "success": false,
+  "message": "Este álbum ya tiene un catálogo de láminas definido",
+  "errorCode": "CATALOG_ALREADY_EXISTS",
+  "timestamp": "2026-03-12T10:30:00"
+}
+```

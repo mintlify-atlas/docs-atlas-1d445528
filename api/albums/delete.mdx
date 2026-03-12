@@ -1,0 +1,71 @@
+---
+title: 'Delete Album'
+api: 'DELETE /api/albums/{id}'
+description: 'Soft delete an album (marks it as inactive)'
+---
+
+## Path Parameters
+
+<ParamField path="id" type="long" required>
+  The unique identifier of the album to delete
+</ParamField>
+
+## Response
+
+<ResponseField name="success" type="boolean">
+  Indicates if the request was successful
+</ResponseField>
+
+<ResponseField name="message" type="string">
+  Response message: "Álbum con ID: {id} ha sido marcado como inactivo"
+</ResponseField>
+
+<ResponseField name="data" type="null">
+  No data returned for delete operations
+</ResponseField>
+
+<ResponseField name="timestamp" type="string">
+  ISO 8601 timestamp of the response
+</ResponseField>
+
+## Example Request
+
+```bash cURL
+curl -X DELETE http://localhost:8080/api/albums/1
+```
+
+## Example Responses
+
+```json 200 OK
+{
+  "success": true,
+  "message": "Álbum con ID: 1 ha sido marcado como inactivo",
+  "timestamp": "2026-03-12T15:00:00"
+}
+```
+
+```json 404 Not Found
+{
+  "success": false,
+  "message": "Album not found with ID: 999",
+  "errorCode": "ALBUM_NOT_FOUND",
+  "timestamp": "2026-03-12T15:00:00"
+}
+```
+
+## Important Notes
+
+<Warning>
+  This is a **soft delete** operation. The album is marked as inactive rather than permanently removed from the database.
+</Warning>
+
+<Info>
+  To view inactive albums, use the [List Albums](/api/albums/list) endpoint with the `active=false` query parameter.
+</Info>
+
+## Behavior
+
+- The album record remains in the database
+- The `active` field is set to `false`
+- The album will not appear in default listings (unless specifically filtered)
+- Related data (winners, stickers, etc.) may still reference this album

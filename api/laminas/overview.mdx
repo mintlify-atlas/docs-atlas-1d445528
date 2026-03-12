@@ -1,0 +1,120 @@
+---
+title: 'Laminas API Overview'
+description: 'Manage sticker collections with catalog validation and duplicate detection'
+---
+
+## Introduction
+
+The Laminas API allows you to manage sticker collections within albums. It provides comprehensive functionality for adding stickers (both individually and in bulk), tracking duplicates, and validating against predefined catalogs.
+
+## Key Features
+
+### Catalog Validation
+
+All stickers must exist in the album's catalog before they can be added. This ensures data integrity and prevents invalid stickers from being added to your collection.
+
+<Warning>
+  You must create a catalog for an album before adding any stickers. Attempting to add stickers without a catalog will result in an error.
+</Warning>
+
+### Duplicate Detection
+
+The API automatically detects when you add a sticker that already exists in your collection:
+
+- Tracks the total number of copies for each sticker
+- Returns duplicate status in responses
+- Allows multiple copies of the same sticker (useful for trading)
+
+### Bulk Upload
+
+The bulk upload endpoint (`/api/laminas/masivo`) allows you to add multiple stickers in a single request:
+
+- Validates each sticker against the catalog
+- Returns detailed results for each sticker (success or failure)
+- Provides summary statistics (successful vs failed)
+
+<Note>
+  Bulk uploads process all stickers even if some fail validation. Each sticker in the response includes its status.
+</Note>
+
+## Base URL
+
+```
+/api/laminas
+```
+
+## Available Endpoints
+
+<CardGroup cols={2}>
+  <Card title="Create Sticker" icon="plus" href="/api/laminas/create">
+    Add a single sticker with duplicate detection
+  </Card>
+  <Card title="Bulk Upload" icon="upload" href="/api/laminas/bulk-upload">
+    Upload multiple stickers at once
+  </Card>
+  <Card title="List Stickers" icon="list" href="/api/laminas/list">
+    Get all stickers or filter by album
+  </Card>
+  <Card title="Get Sticker" icon="file" href="/api/laminas/get">
+    Retrieve a specific sticker by ID
+  </Card>
+  <Card title="Update Sticker" icon="pen" href="/api/laminas/update">
+    Modify sticker information
+  </Card>
+  <Card title="Delete Sticker" icon="trash" href="/api/laminas/delete">
+    Soft delete a sticker (mark as inactive)
+  </Card>
+</CardGroup>
+
+## Common Response Structure
+
+All endpoints return responses wrapped in a standard `ApiResponseDTO` structure:
+
+```json
+{
+  "success": true,
+  "message": "Operation completed successfully",
+  "data": { /* endpoint-specific data */ },
+  "timestamp": "2026-03-12T10:30:00"
+}
+```
+
+## Validation Rules
+
+1. **Sticker name** - Required, must not be blank
+2. **Release date** - Required, must be a valid date
+3. **Sticker type** - Required, must not be blank
+4. **Album ID** - Required for single create operations
+5. **Catalog validation** - Sticker must exist in the album's catalog
+
+## Error Handling
+
+### Catalog Not Found
+
+```json
+{
+  "success": false,
+  "message": "Debe crear un catálogo de láminas primero",
+  "timestamp": "2026-03-12T10:30:00"
+}
+```
+
+### Sticker Not in Catalog
+
+```json
+{
+  "success": false,
+  "message": "❌ ERROR: La lámina 'STICKER_NAME' NO existe en el catálogo del álbum. Solo puedes agregar láminas que están definidas en el catálogo.",
+  "timestamp": "2026-03-12T10:30:00"
+}
+```
+
+### Resource Not Found
+
+```json
+{
+  "success": false,
+  "message": "Lámina with ID 123 not found",
+  "timestamp": "2026-03-12T10:30:00"
+}
+```

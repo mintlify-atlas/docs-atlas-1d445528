@@ -1,0 +1,474 @@
+---
+title: 'Installation'
+description: 'Complete setup guide for the Album Collection Manager API'
+icon: 'download'
+---
+
+## Prerequisites
+
+Before installing the Album Collection Manager API, ensure you have the following installed:
+
+<CardGroup cols={2}>
+  <Card title="Java 21+" icon="mug-hot">
+    Required for running the Spring Boot application. Download from [Adoptium](https://adoptium.net/).
+  </Card>
+  
+  <Card title="Maven 3.6+" icon="box">
+    Optional - The project includes a Maven wrapper (`mvnw`) that automatically downloads the correct version.
+  </Card>
+  
+  <Card title="Git" icon="code-branch">
+    For cloning the repository. Download from [git-scm.com](https://git-scm.com/).
+  </Card>
+  
+  <Card title="MySQL 8.0+" icon="database">
+    Optional - Only required for production deployment. H2 database is used by default for development.
+  </Card>
+</CardGroup>
+
+### Verify Java Installation
+
+Check that Java 21 or higher is installed:
+
+```bash
+java -version
+```
+
+You should see output similar to:
+
+```
+openjdk version "21.0.1" 2023-10-17
+OpenJDK Runtime Environment (build 21.0.1+12-29)
+```
+
+## Installation Steps
+
+<Steps>
+  <Step title="Clone the Repository">
+    Download the source code from GitHub:
+    
+    ```bash
+    git clone https://github.com/elCorbacho/18.web2-examen
+    cd 18.web2-examen
+    ```
+  </Step>
+
+  <Step title="Install Dependencies">
+    Use the Maven wrapper to download all required dependencies:
+    
+    ```bash
+    ./mvnw clean install
+    ```
+    
+    <Note>
+      On Windows, use `mvnw.cmd` instead of `./mvnw`
+    </Note>
+    
+    This command will:
+    - Download all Maven dependencies defined in `pom.xml`
+    - Compile the source code
+    - Run unit tests
+    - Package the application as a JAR file
+    
+    The build process should complete with:
+    
+    ```
+    [INFO] BUILD SUCCESS
+    [INFO] Total time: 45.123 s
+    ```
+  </Step>
+
+  <Step title="Configure the Database (Optional)">
+    By default, the application uses an H2 in-memory database for development. For production or persistent data, configure MySQL:
+    
+    Edit `src/main/resources/application.properties`:
+    
+    ```properties
+    # Comment out H2 configuration
+    #spring.datasource.url=jdbc:h2:mem:web2examen;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    #spring.datasource.driver-class-name=org.h2.Driver
+    #spring.datasource.username=sa
+    #spring.datasource.password=
+    
+    # Uncomment and configure MySQL
+    spring.datasource.url=jdbc:mysql://localhost:3306/album_collection
+    spring.datasource.username=your_username
+    spring.datasource.password=your_password
+    spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver
+    spring.jpa.hibernate.ddl-auto=update
+    spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.MySQL8Dialect
+    ```
+    
+    Create the MySQL database:
+    
+    ```sql
+    CREATE DATABASE album_collection CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+    ```
+  </Step>
+
+  <Step title="Run the Application">
+    Start the Spring Boot application:
+    
+    ```bash
+    ./mvnw spring-boot:run
+    ```
+    
+    The application will start on `http://localhost:8080` by default.
+    
+    You should see:
+    
+    ```
+    INFO - Started Application in 3.456 seconds (JVM running for 4.123)
+    INFO - Swagger UI available at: http://localhost:8080/swagger-ui.html
+    INFO - H2 Console available at: http://localhost:8080/h2-console
+    ```
+  </Step>
+
+  <Step title="Verify Installation">
+    Test that the API is running:
+    
+    ```bash
+    curl http://localhost:8080/actuator/health
+    ```
+    
+    Expected response:
+    
+    ```json
+    {
+      "status": "UP"
+    }
+    ```
+  </Step>
+</Steps>
+
+## Configuration Options
+
+### Application Properties
+
+The application can be configured through `src/main/resources/application.properties`:
+
+<AccordionGroup>
+  <Accordion title="Server Configuration">
+    ```properties
+    # Server port (default: 8080)
+    server.port=8080
+    
+    # Application context path
+    server.servlet.context-path=/
+    
+    # Character encoding
+    server.servlet.encoding.enabled=true
+    server.servlet.encoding.charset=UTF-8
+    server.servlet.encoding.force=true
+    
+    # Application name
+    spring.application.name=IPSS WEB2 EXAMEN
+    ```
+  </Accordion>
+  
+  <Accordion title="H2 Database (Development)">
+    ```properties
+    # H2 in-memory database
+    spring.datasource.url=jdbc:h2:mem:web2examen;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE
+    spring.datasource.driver-class-name=org.h2.Driver
+    spring.datasource.username=sa
+    spring.datasource.password=
+    
+    # H2 Console (accessible at /h2-console)
+    spring.h2.console.enabled=true
+    spring.h2.console.path=/h2-console
+    
+    # JPA/Hibernate
+    spring.jpa.hibernate.ddl-auto=create-drop
+    spring.jpa.show-sql=false
+    spring.jpa.properties.hibernate.format_sql=true
+    spring.jpa.properties.hibernate.globally_quoted_identifiers=true
+    ```
+  </Accordion>
+  
+  <Accordion title="MySQL Database (Production)">
+    ```properties
+    # MySQL connection
+    spring.datasource.url=jdbc:mysql://localhost:3306/album_collection
+    spring.datasource.username=admin
+    spring.datasource.password=your_secure_password
+    spring.datasource.driver-class-name=com.mysql.cj.jdbc.Driver
+    
+    # JPA/Hibernate for MySQL
+    spring.jpa.hibernate.ddl-auto=validate
+    spring.jpa.properties.hibernate.dialect=org.hibernate.dialect.MySQL8Dialect
+    spring.jpa.database-platform=org.hibernate.dialect.MySQL8Dialect
+    ```
+  </Accordion>
+  
+  <Accordion title="Swagger/OpenAPI Documentation">
+    ```properties
+    # API documentation paths
+    springdoc.api-docs.path=/v3/api-docs
+    springdoc.swagger-ui.path=/swagger-ui.html
+    springdoc.swagger-ui.enabled=true
+    springdoc.api-docs.enabled=true
+    
+    # UI customization
+    springdoc.swagger-ui.operations-sorter=method
+    springdoc.swagger-ui.tags-sorter=alpha
+    ```
+  </Accordion>
+  
+  <Accordion title="Actuator Monitoring">
+    ```properties
+    # Exposed actuator endpoints
+    management.endpoints.web.exposure.include=health,info,metrics,env
+    management.endpoint.health.show-details=always
+    management.info.env.enabled=true
+    ```
+  </Accordion>
+</AccordionGroup>
+
+### Environment Variables
+
+You can override configuration using environment variables:
+
+```bash
+# Set server port
+export SERVER_PORT=8090
+
+# Set database URL
+export SPRING_DATASOURCE_URL=jdbc:mysql://localhost:3306/album_collection
+export SPRING_DATASOURCE_USERNAME=admin
+export SPRING_DATASOURCE_PASSWORD=secret
+
+# Run with environment variables
+./mvnw spring-boot:run
+```
+
+### Command Line Arguments
+
+Pass configuration as command line arguments:
+
+```bash
+./mvnw spring-boot:run -Dspring-boot.run.arguments="--server.port=8090 --spring.profiles.active=prod"
+```
+
+## Building for Production
+
+### Create Executable JAR
+
+Build a standalone JAR file:
+
+```bash
+./mvnw clean package -DskipTests
+```
+
+The JAR will be created in `target/examen-0.0.1-SNAPSHOT.jar`
+
+### Run the JAR
+
+```bash
+java -jar target/examen-0.0.1-SNAPSHOT.jar
+```
+
+### With Custom Configuration
+
+```bash
+java -jar target/examen-0.0.1-SNAPSHOT.jar \
+  --server.port=8090 \
+  --spring.datasource.url=jdbc:mysql://production-db:3306/album_collection
+```
+
+## Technology Stack
+
+The Album Collection Manager API is built with:
+
+<CardGroup cols={2}>
+  <Card title="Spring Boot 3.5.11" icon="leaf">
+    Modern Java framework for building production-ready applications
+  </Card>
+  
+  <Card title="Java 21" icon="mug-hot">
+    Latest LTS version with preview features enabled
+  </Card>
+  
+  <Card title="Spring Data JPA" icon="database">
+    Simplified database access and ORM with Hibernate
+  </Card>
+  
+  <Card title="H2 Database" icon="server">
+    In-memory database for development and testing
+  </Card>
+  
+  <Card title="MySQL Connector" icon="plug">
+    Production-ready MySQL database support
+  </Card>
+  
+  <Card title="SpringDoc OpenAPI" icon="book">
+    Automatic API documentation generation (Swagger UI)
+  </Card>
+  
+  <Card title="Lombok" icon="wrench">
+    Reduces boilerplate code with annotations
+  </Card>
+  
+  <Card title="Spring Boot Actuator" icon="gauge">
+    Production-ready monitoring and metrics
+  </Card>
+</CardGroup>
+
+## Dependencies Overview
+
+Key dependencies from `pom.xml`:
+
+```xml
+<dependencies>
+    <!-- Web Framework -->
+    <dependency>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-web</artifactId>
+    </dependency>
+    
+    <!-- Data Persistence -->
+    <dependency>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-data-jpa</artifactId>
+    </dependency>
+    
+    <!-- Validation -->
+    <dependency>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-validation</artifactId>
+    </dependency>
+    
+    <!-- API Documentation -->
+    <dependency>
+        <groupId>org.springdoc</groupId>
+        <artifactId>springdoc-openapi-starter-webmvc-ui</artifactId>
+        <version>2.8.5</version>
+    </dependency>
+    
+    <!-- Monitoring -->
+    <dependency>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-actuator</artifactId>
+    </dependency>
+</dependencies>
+```
+
+## Development Tools
+
+### H2 Console
+
+Access the H2 database console for debugging:
+
+1. Navigate to `http://localhost:8080/h2-console`
+2. Use the following connection settings:
+   - **JDBC URL**: `jdbc:h2:mem:web2examen`
+   - **Username**: `sa`
+   - **Password**: (leave empty)
+
+### Hot Reload
+
+The application includes Spring Boot DevTools for automatic restart on code changes:
+
+```xml
+<dependency>
+    <groupId>org.springframework.boot</groupId>
+    <artifactId>spring-boot-devtools</artifactId>
+    <scope>runtime</scope>
+    <optional>true</optional>
+</dependency>
+```
+
+### Running Tests
+
+Execute the test suite:
+
+```bash
+./mvnw test
+```
+
+## Troubleshooting
+
+<AccordionGroup>
+  <Accordion title="Build fails with Java version error">
+    Ensure you have Java 21 installed:
+    
+    ```bash
+    java -version
+    ```
+    
+    Set `JAVA_HOME` environment variable:
+    
+    ```bash
+    export JAVA_HOME=/path/to/java21
+    ```
+  </Accordion>
+  
+  <Accordion title="Port already in use">
+    Change the server port in `application.properties`:
+    
+    ```properties
+    server.port=8090
+    ```
+    
+    Or use command line:
+    
+    ```bash
+    ./mvnw spring-boot:run -Dspring-boot.run.arguments=--server.port=8090
+    ```
+  </Accordion>
+  
+  <Accordion title="Database connection error">
+    For H2:
+    - Ensure `spring.h2.console.enabled=true`
+    - Check the JDBC URL in application.properties
+    
+    For MySQL:
+    - Verify MySQL is running: `mysql --version`
+    - Test connection: `mysql -u username -p`
+    - Ensure database exists: `CREATE DATABASE album_collection;`
+  </Accordion>
+  
+  <Accordion title="Maven wrapper not found">
+    Download the Maven wrapper:
+    
+    ```bash
+    mvn -N io.takari:maven:wrapper
+    ```
+    
+    Make it executable (Unix/Linux/Mac):
+    
+    ```bash
+    chmod +x mvnw
+    ```
+  </Accordion>
+  
+  <Accordion title="Lombok annotations not working">
+    Install Lombok plugin for your IDE:
+    
+    - **IntelliJ IDEA**: Settings → Plugins → Install "Lombok"
+    - **Eclipse**: Download from [projectlombok.org](https://projectlombok.org/)
+    - **VS Code**: Install "Lombok Annotations Support"
+    
+    Enable annotation processing in your IDE settings.
+  </Accordion>
+</AccordionGroup>
+
+## Next Steps
+
+<CardGroup cols={2}>
+  <Card title="Quickstart Guide" icon="rocket" href="/quickstart">
+    Make your first API call in under 5 minutes
+  </Card>
+  
+  <Card title="API Reference" icon="code" href="/api/albums/overview">
+    Explore all available endpoints
+  </Card>
+  
+  <Card title="Authentication" icon="lock" href="/guides/authentication">
+    Secure your API with authentication
+  </Card>
+  
+  <Card title="Deployment" icon="cloud" href="/guides/docker-deployment">
+    Deploy to production environments
+  </Card>
+</CardGroup>
